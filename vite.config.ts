@@ -1,10 +1,13 @@
+// filepath: /C:/git/travelling-salesman-frontend/project/vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import dotenv from 'dotenv';
 
-// https://vitejs.dev/config/
+dotenv.config();
+
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-  },
+  define: {
+    'process.env': process.env
+  }
 });
