@@ -1,3 +1,4 @@
+
 export interface Location {
   latitude: number;
   longitude: number;
@@ -22,27 +23,24 @@ export interface Salesman {
 export interface AssignedJob extends Job {
   salesman_id: number | null;
   start_time: string | null;
-  assignment_status?: string;
-  latitude?: number;
-  longitude?: number;
 }
 
-export interface ApiRequest {
+export interface RosterRequest {
   jobs: Job[];
   salesmen: Salesman[];
 }
 
-export interface ApiResponse {
+export interface RosterResponse {
   jobs: Record<string, AssignedJob[]>;
   unassigned_jobs: AssignedJob[];
   message: string;
 }
 
-export interface FlattenedJob {
+export interface JobTableRow {
   job_id: string;
   date: string;
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   duration_mins: number;
   entry_time: string;
   exit_time: string;
