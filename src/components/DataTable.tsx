@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { exportTableToCSV, downloadCSV } from '@/utils/fileParser';
+import { exportTableToCSV, downloadCSV } from '@/lib/fileParser';
 import { JobTableRow } from '@/types';
 import { cn } from '@/lib/utils';
 

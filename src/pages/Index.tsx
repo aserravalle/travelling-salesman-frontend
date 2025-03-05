@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { parseCSV, parseExcel, processJobData, processSalesmanData, convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/utils/fileParser';
+import { parseCSV, parseExcel, processJobData, processSalesmanData, convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/fileParser';
 import { assignJobs } from '@/services/api';
 import { fadeIn, staggerContainer } from '@/lib/motion';
 import { Job, Salesman, RosterRequest, JobTableRow } from '@/types';
