@@ -27,12 +27,12 @@ export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> =
     });
     
     // TODO Add API Call
-    return mockAssignmentResponse();
+    return mockRosterResponse();
   }
 };
 
 // Mock response for development/preview
-const mockAssignmentResponse = (): RosterResponse => {
+const mockRosterResponse = (): RosterResponse => {
   return {
     jobs: {
       "101": [

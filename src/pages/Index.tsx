@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileUpload } from '@/components/FileUpload';
@@ -13,6 +12,7 @@ import { fadeIn, staggerContainer } from '@/lib/motion';
 import { Job, Salesman, RosterRequest, JobTableRow } from '@/types';
 import { ArrowRight, Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import Map from '@/components/Map';
+import StatusBanner from '@/components/StatusBanner';
 
 const Index = () => {
   const { toast } = useToast();
@@ -25,8 +25,9 @@ const Index = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasResults, setHasResults] = useState(false);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+  const [responseMessage, setResponseMessage] = useState('');
+  const [responseStatus, setResponseStatus] = useState<'success' | 'error' | 'warning'>('success');
 
-  // Handle files selection and smart detection
   const handleFilesSelected = async (files: File[]) => {
     setUploadedFiles(files);
     if (files.length === 0) {
@@ -38,7 +39,6 @@ const Index = () => {
     setIsProcessingFiles(true);
     
     try {
-      // Process each file
       for (const file of files) {
         let rawData;
         if (file.name.endsWith('.csv')) {
@@ -54,7 +54,6 @@ const Index = () => {
           continue;
         }
 
-        // Skip empty files
         if (!rawData || rawData.length === 0) {
           toast({
             variant: "destructive",
@@ -64,7 +63,6 @@ const Index = () => {
           continue;
         }
 
-        // Smart detection of file type
         const firstRow = rawData[0];
         const hasJobFields = 'job_id' in firstRow && 'duration_mins' in firstRow;
         const hasSalesmanFields = 'salesman_id' in firstRow && 'home_location' in firstRow || 
@@ -85,7 +83,6 @@ const Index = () => {
             description: `Successfully parsed ${processedSalesmen.length} salesmen from ${file.name}`,
           });
         } else {
-          // Try to guess based on column names
           const columnSet = new Set(Object.keys(firstRow).map(key => key.toLowerCase()));
           
           const jobKeywords = ['job', 'task', 'assignment', 'duration', 'entry', 'exit'];
@@ -134,7 +131,6 @@ const Index = () => {
     }
   };
 
-  // Submit data for job assignment
   const handleSubmit = async () => {
     if (parsedJobs.length === 0 || parsedSalesmen.length === 0) {
       toast({
@@ -157,9 +153,20 @@ const Index = () => {
       const tableRows = convertResponseToTableRows(response);
       
       setResultRows(tableRows);
-      setFilteredRows(tableRows); // Initialize filtered rows with all rows
+      setFilteredRows(tableRows);
       setHasResults(true);
       setActiveTab('results');
+      
+      setResponseMessage(response.message);
+      
+      // TODO: Update the response messages to correspond with the status
+      if (response.message.includes('Error') || response.message.includes('error')) {
+        setResponseStatus('error');
+      } else if (response.message.includes('unassigned')) {
+        setResponseStatus('warning');
+      } else {
+        setResponseStatus('success');
+      }
       
       toast({
         title: "Jobs assigned successfully",
@@ -167,6 +174,8 @@ const Index = () => {
       });
     } catch (error) {
       console.error("Error assigning jobs:", error);
+      setResponseMessage("Error occurred when assigning jobs");
+      setResponseStatus('error');
       toast({
         variant: "destructive",
         title: "Error assigning jobs",
@@ -177,7 +186,6 @@ const Index = () => {
     }
   };
 
-  // Export results to CSV
   const handleExport = () => {
     if (resultRows.length === 0) {
       toast({
@@ -197,7 +205,6 @@ const Index = () => {
     });
   };
 
-  // Reset all data
   const handleReset = () => {
     setUploadedFiles([]);
     setParsedJobs([]);
@@ -213,21 +220,19 @@ const Index = () => {
     });
   };
 
-  // Update filtered rows
   const handleFilteredDataChange = (data: JobTableRow[]) => {
     setFilteredRows(data);
   };
 
-  // Check if ready to process
   const isReadyToProcess = parsedJobs.length > 0 && parsedSalesmen.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950 dark:to-blue-950">
+      <header className="border-b shadow-sm bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto py-6">
-          <h1 className="text-3xl font-bold tracking-tight">Job Assignment Optimizer</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-sky-950 dark:text-sky-100 bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">Travelling Salesman</h1>
           <p className="text-muted-foreground mt-1">
-            Upload job and salesmen data to optimize work assignments
+            Get optimal delivery routes for your travelling salesmen
           </p>
         </div>
       </header>
@@ -239,7 +244,7 @@ const Index = () => {
           className="space-y-8"
         >
           <div className="flex justify-between items-center">
-            <TabsList>
+            <TabsList className="shadow-md">
               <TabsTrigger value="upload">Upload Files</TabsTrigger>
               <TabsTrigger value="results" disabled={!hasResults}>
                 Assignment Results
@@ -250,7 +255,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 onClick={handleExport}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 shadow-sm hover:shadow"
               >
                 <Download className="w-4 h-4" />
                 Export CSV
@@ -284,9 +289,9 @@ const Index = () => {
                       variants={fadeIn('right', 0.2)}
                       initial="hidden"
                       animate="show"
-                      className="rounded-md border"
+                      className="rounded-md border shadow-md bg-white"
                     >
-                      <div className="bg-muted/30 p-3 border-b">
+                      <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -323,7 +328,7 @@ const Index = () => {
                       </div>
                     </motion.div>
                   ) : (
-                    <div className="h-[250px] flex items-center justify-center border rounded-md bg-muted/5">
+                    <div className="h-[250px] flex items-center justify-center border rounded-md bg-white/50 shadow-md">
                       <div className="text-center text-muted-foreground">
                         <p>No job data detected yet</p>
                         <p className="text-sm">Upload a file with job data</p>
@@ -338,9 +343,9 @@ const Index = () => {
                       variants={fadeIn('left', 0.2)}
                       initial="hidden"
                       animate="show"
-                      className="rounded-md border"
+                      className="rounded-md border shadow-md bg-white"
                     >
-                      <div className="bg-muted/30 p-3 border-b">
+                      <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -373,7 +378,7 @@ const Index = () => {
                       </div>
                     </motion.div>
                   ) : (
-                    <div className="h-[250px] flex items-center justify-center border rounded-md bg-muted/5">
+                    <div className="h-[250px] flex items-center justify-center border rounded-md bg-white/50 shadow-md">
                       <div className="text-center text-muted-foreground">
                         <p>No salesman data detected yet</p>
                         <p className="text-sm">Upload a file with salesman data</p>
@@ -385,7 +390,7 @@ const Index = () => {
             )}
 
             <div className="flex justify-center">
-              <Card className="bg-primary/5 max-w-lg w-full">
+              <Card className="bg-gradient-to-br from-sky-100/50 to-blue-100/50 dark:from-sky-900/30 dark:to-blue-900/20 max-w-lg w-full shadow-lg">
                 <CardHeader>
                   <CardTitle>Ready to Process?</CardTitle>
                   <CardDescription>
@@ -409,7 +414,7 @@ const Index = () => {
                       <Button 
                         variant="outline" 
                         onClick={handleReset}
-                        className="flex-1"
+                        className="flex-1 shadow-sm hover:shadow"
                         disabled={isSubmitting || isProcessingFiles}
                       >
                         Reset Data
@@ -418,7 +423,7 @@ const Index = () => {
                     <Button 
                       onClick={handleSubmit}
                       disabled={isSubmitting || !isReadyToProcess || isProcessingFiles}
-                      className={`flex items-center gap-2 ${(parsedJobs.length > 0 || parsedSalesmen.length > 0) ? 'flex-1' : 'w-full'}`}
+                      className={`bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 shadow-md hover:shadow-lg flex items-center gap-2 ${(parsedJobs.length > 0 || parsedSalesmen.length > 0) ? 'flex-1' : 'w-full'}`}
                     >
                       {isSubmitting ? (
                         <>
@@ -446,34 +451,37 @@ const Index = () => {
           <TabsContent value="results">
             {hasResults ? (
               <div className="space-y-4">
-                {/* Map Component */}
+                <StatusBanner message={responseMessage} variant={responseStatus} />
+                
                 <Map data={resultRows} filteredData={filteredRows} />
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Job Assignment Results</CardTitle>
+                <Card className="shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-sky-100 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/20">
+                    <CardTitle>Roster</CardTitle>
                     <CardDescription>
-                      Showing {resultRows.length} job assignments - Filter, sort, and export the results
+                      Showing {resultRows.length} assignments - Filter, sort, and export the results
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <DataTable 
-                      data={resultRows} 
-                      onExport={handleExport} 
-                      onFilteredDataChange={handleFilteredDataChange}
-                    />
+                    <div className="mt-4">
+                      <DataTable 
+                        data={resultRows} 
+                        onExport={handleExport} 
+                        onFilteredDataChange={handleFilteredDataChange}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </div>
             ) : (
-              <div className="text-center p-12">
+              <div className="text-center p-12 bg-white/50 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium">No results available</h3>
                 <p className="text-muted-foreground">
                   Process your job and salesmen data to view assignment results
                 </p>
                 <Button 
                   onClick={() => setActiveTab('upload')}
-                  className="mt-4"
+                  className="mt-4 shadow-sm hover:shadow"
                   variant="outline"
                 >
                   Go to Upload Files
@@ -484,9 +492,9 @@ const Index = () => {
         </Tabs>
       </main>
 
-      <footer className="border-t mt-12">
+      <footer className="border-t mt-12 bg-white/50 backdrop-blur-sm shadow-md">
         <div className="container mx-auto py-6 text-center text-sm text-muted-foreground">
-          Job Assignment Optimizer &copy; {new Date().getFullYear()}
+          Travelling Salesman &copy; {new Date().getFullYear()}
         </div>
       </footer>
     </div>

@@ -1,14 +1,29 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { MapPin, AlertCircle, Route } from 'lucide-react';
+import { MapPin, Route } from 'lucide-react';
 import { JobTableRow } from '@/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+
+// Define the GeoJSON namespace for TypeScript
+declare namespace GeoJSON {
+  type Feature = {
+    type: 'Feature';
+    properties: any;
+    geometry: {
+      type: string;
+      coordinates: number[][];
+    };
+  };
+  
+  type FeatureCollection = {
+    type: 'FeatureCollection';
+    features: Feature[];
+  };
+}
 
 interface MapProps {
   data: JobTableRow[];
@@ -20,19 +35,39 @@ interface MapProps {
 const Map = ({ 
   data, 
   filteredData, 
-  title = "Job Locations Map", 
-  description = "Visual representation of job assignments and salesmen locations" 
+  title = "Trip Visualization", 
+  description = "Visual representation of delivery routes and salesmen locations" 
 }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [tokenInputVisible, setTokenInputVisible] = useState(true);
-  const [showDirections, setShowDirections] = useState(true);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const routeRef = useRef<mapboxgl.GeoJSONSource | null>(null);
+  const [showDirections, setShowDirections] = useState(true);
+  const [mapInitialized, setMapInitialized] = useState(false);
+  
+  // Get Mapbox token from environment variable or use fallback to input method
+  const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoibWFnaWNjaGlsaSIsImEiOiJjbTdvbzk1c3kwYzFqMmlyMXNrOXB6OXdhIn0.F3tvrN3bdMBuIZGc4GCdYA';
   
   // Use filtered data if provided, otherwise use all data
   const displayData = filteredData || data;
+  
+  // Determine if we are filtering by a specific salesman
+  const getFilteredSalesmanId = (): string | null => {
+    if (!filteredData || filteredData.length === 0) return null;
+    
+    // Check if all filtered jobs have the same salesman_id
+    const firstSalesmanId = filteredData[0].salesman_id;
+    const allSameSalesman = filteredData.every(job => job.salesman_id === firstSalesmanId);
+    
+    // If filtering by a specific salesman or unassigned jobs
+    if (allSameSalesman) {
+      return firstSalesmanId;
+    }
+    
+    return null; // Mixed salesmen or all data
+  };
+  
+  const filteredSalesmanId = getFilteredSalesmanId();
   
   // Sort data by salesman_id and start_time to determine the route order
   const sortedData = [...displayData].sort((a, b) => {
@@ -48,16 +83,33 @@ const Map = ({
     if (!b.start_time) return -1;
     return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
   });
+
+  // Clean up the current map and all its resources
+  const cleanupMap = () => {
+    if (map.current) {
+      // Remove all markers
+      Object.values(markersRef.current).forEach(marker => marker.remove());
+      markersRef.current = {};
+      
+      // Remove the map
+      map.current.remove();
+      map.current = null;
+      routeRef.current = null;
+    }
+  };
   
   const initializeMap = () => {
-    if (!mapContainer.current || !mapboxToken) return;
+    // Clean up existing map if it exists
+    cleanupMap();
+    
+    if (!mapContainer.current) return;
     
     mapboxgl.accessToken = mapboxToken;
     
     // Calculate bounds to fit all locations
     const bounds = new mapboxgl.LngLatBounds();
     
-    // Add job locations to bounds
+    // Add job locations to bounds - only for visible/filtered data
     displayData.forEach(job => {
       if (job.longitude && job.latitude) {
         bounds.extend([job.longitude, job.latitude]);
@@ -111,7 +163,7 @@ const Map = ({
       
       routeRef.current = map.current.getSource('route') as mapboxgl.GeoJSONSource;
       
-      // Add markers for each job
+      // Add markers for each job - only for visible/filtered data
       displayData.forEach(job => {
         if (!job.longitude || !job.latitude) return;
         
@@ -130,6 +182,8 @@ const Map = ({
           maxZoom: 13,
         });
       }
+      
+      setMapInitialized(true);
     });
   };
   
@@ -158,7 +212,7 @@ const Map = ({
     // Create popup for job details
     const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
       <div style="font-family: system-ui, sans-serif; padding: 4px;">
-        <h3 style="margin: 0 0 8px; font-weight: 600;">Job #${job.job_id}</h3>
+        <h3 style="margin: 0 0 8px; font-weight: 600;">Delivery #${job.job_id}</h3>
         <p style="margin: 0 0 4px;"><strong>Duration:</strong> ${job.duration_mins} mins</p>
         <p style="margin: 0 0 4px;"><strong>Entry:</strong> ${new Date(job.entry_time).toLocaleTimeString()}</p>
         <p style="margin: 0 0 4px;"><strong>Exit:</strong> ${new Date(job.exit_time).toLocaleTimeString()}</p>
@@ -190,23 +244,26 @@ const Map = ({
     // Group jobs by salesman_id
     const salesmanJobs: { [key: string]: JobTableRow[] } = {};
     
-    sortedData.forEach(job => {
-      if (!job.longitude || !job.latitude) return;
-      
-      const salesmanId = job.salesman_id || 'unassigned';
-      
-      if (!salesmanJobs[salesmanId]) {
-        salesmanJobs[salesmanId] = [];
-      }
-      
-      salesmanJobs[salesmanId].push(job);
-    });
+    // If filtered by a specific salesman, only add routes for that salesman
+    if (filteredSalesmanId) {
+      salesmanJobs[filteredSalesmanId] = sortedData.filter(
+        job => job.salesman_id === filteredSalesmanId
+      );
+    } else {
+      // Only show routes when filtering by a specific salesman
+      // For "all salesmen" view, don't show any routes
+      routeRef.current.setData({
+        type: 'FeatureCollection',
+        features: []
+      } as any);
+      return;
+    }
     
     // Create route lines for each salesman's jobs
     const salesmanRoutes: GeoJSON.Feature[] = [];
     
     Object.entries(salesmanJobs).forEach(([salesmanId, jobs]) => {
-      if (salesmanId === 'unassigned' || jobs.length < 2) return;
+      if (salesmanId === 'null' || salesmanId === 'undefined' || jobs.length < 2) return;
       
       // Sort jobs by start_time
       const sortedJobs = [...jobs].sort((a, b) => {
@@ -235,153 +292,66 @@ const Map = ({
     routeRef.current.setData({
       type: 'FeatureCollection',
       features: salesmanRoutes
-    });
-  };
-  
-  const handleTokenSubmit = () => {
-    if (mapboxToken.trim() !== '') {
-      setTokenInputVisible(false);
-      localStorage.setItem('mapboxToken', mapboxToken);
-      initializeMap();
-    }
+    } as any);
   };
   
   const toggleDirections = () => {
     setShowDirections(!showDirections);
   };
   
+  // Initialize map on component mount
   useEffect(() => {
-    // Check if token exists in localStorage
-    const savedToken = localStorage.getItem('mapboxToken');
-    if (savedToken) {
-      setMapboxToken(savedToken);
-      setTokenInputVisible(false);
-    }
-  }, []);
-  
-  useEffect(() => {
-    if (!tokenInputVisible && mapboxToken) {
-      initializeMap();
-    }
+    initializeMap();
     
     return () => {
-      if (map.current) {
-        map.current.remove();
-      }
+      cleanupMap();
     };
-  }, [tokenInputVisible, mapboxToken]);
+  }, []);
   
-  // Update markers and routes when data changes
+  // Completely reinitialize the map when filtered data changes
   useEffect(() => {
-    if (!map.current || !mapboxToken) return;
-    
-    // Clear existing markers
-    Object.values(markersRef.current).forEach(marker => marker.remove());
-    markersRef.current = {};
-    
-    // Calculate new bounds
-    const bounds = new mapboxgl.LngLatBounds();
-    
-    // Add job locations to bounds and create new markers
-    displayData.forEach(job => {
-      if (!job.longitude || !job.latitude) return;
-      
-      bounds.extend([job.longitude, job.latitude]);
-      addMarker(job);
-    });
-    
-    // Update routes if directions are enabled
-    if (showDirections && routeRef.current) {
-      drawRoutes();
-    } else if (routeRef.current) {
-      // Clear routes if directions are disabled
-      routeRef.current.setData({
-        type: 'FeatureCollection',
-        features: []
-      });
+    // Only reinitialize if the map has been previously initialized
+    // This prevents double initialization on first render
+    if (mapInitialized) {
+      initializeMap();
     }
-    
-    // Fit map to new bounds if we have locations
-    if (!bounds.isEmpty()) {
-      map.current.fitBounds(bounds, {
-        padding: 70,
-        maxZoom: 13,
-      });
-    }
-  }, [displayData, showDirections]);
+  }, [filteredData, showDirections]);
   
   return (
-    <Card className="w-full mb-8">
-      <CardHeader>
+    <Card className="w-full mb-8 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-sky-100 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/20">
         <CardTitle className="flex items-center gap-2">
-          <MapPin className="w-5 h-5" />
+          <MapPin className="w-5 h-5 text-sky-600" />
           {title}
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="rounded-md overflow-hidden">
-          {tokenInputVisible ? (
-            <div className="bg-muted/30 p-8 rounded-md border flex flex-col items-center justify-center gap-4 text-center">
-              <AlertCircle className="w-10 h-10 text-amber-500" />
-              <div>
-                <h3 className="text-lg font-medium mb-2">Mapbox API Token Required</h3>
-                <p className="text-muted-foreground mb-4">
-                  Please provide your Mapbox public token to display the map. 
-                  <br />You can get one for free at <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">mapbox.com</a>
-                </p>
-              </div>
-              <div className="flex w-full max-w-md gap-2">
-                <Input
-                  type="text"
-                  placeholder="Enter your Mapbox public token"
-                  value={mapboxToken}
-                  onChange={(e) => setMapboxToken(e.target.value)}
-                  className="flex-1"
+          <div className="flex flex-wrap px-4 py-2 border-b gap-6 items-center bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span className="text-sm">Assigned Deliveries</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span className="text-sm">Unassigned Deliveries</span>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="showDirections" 
+                  checked={showDirections} 
+                  onCheckedChange={() => toggleDirections()}
                 />
-                <Button onClick={handleTokenSubmit}>
-                  Apply
-                </Button>
+                <Label htmlFor="showDirections" className="flex items-center gap-1">
+                  <Route className="h-4 w-4" />
+                  <span>Show Routes</span>
+                </Label>
               </div>
             </div>
-          ) : (
-            <>
-              <div className="flex flex-wrap px-4 py-2 border-b gap-6 items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm">Assigned Jobs</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-sm">Unassigned Jobs</span>
-                </div>
-                <div className="flex items-center gap-2 ml-auto">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="showDirections" 
-                      checked={showDirections} 
-                      onCheckedChange={() => toggleDirections()}
-                    />
-                    <Label htmlFor="showDirections" className="flex items-center gap-1">
-                      <Route className="h-4 w-4" />
-                      <span>Show Routes</span>
-                    </Label>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => {
-                      localStorage.removeItem('mapboxToken');
-                      setTokenInputVisible(true);
-                    }}
-                  >
-                    Change Token
-                  </Button>
-                </div>
-              </div>
-              <div ref={mapContainer} className="w-full h-[500px]" />
-            </>
-          )}
+          </div>
+          <div ref={mapContainer} className="w-full h-[500px]" />
         </div>
       </CardContent>
     </Card>

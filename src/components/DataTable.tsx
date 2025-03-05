@@ -145,7 +145,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
       onExport();
     } else {
       const csvContent = exportTableToCSV(sortedAndFilteredData);
-      downloadCSV(csvContent, 'job_assignments.csv');
+      downloadCSV(csvContent, 'roster.csv');
     }
   };
 
@@ -166,19 +166,19 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+            className="pl-8 shadow-sm"
           />
         </div>
         
         <div className="flex flex-wrap gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="flex items-center gap-1 shadow-sm">
                 <Filter className="h-4 w-4" />
                 <span>Status</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="shadow-lg">
               <DropdownMenuItem onClick={() => setFilterStatus('all')}>
                 All Statuses
               </DropdownMenuItem>
@@ -192,10 +192,10 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
           </DropdownMenu>
           
           <Select value={filterSalesman} onValueChange={setFilterSalesman}>
-            <SelectTrigger className="w-[180px] h-9">
+            <SelectTrigger className="w-[180px] h-9 shadow-sm">
               <SelectValue placeholder="Filter by Salesman" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="shadow-lg">
               <SelectItem value="all">All Salesmen</SelectItem>
               <SelectItem value="unassigned">Unassigned</SelectItem>
               {salesmanIds.map((id) => (
@@ -206,21 +206,21 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
             </SelectContent>
           </Select>
           
-          <Button variant="outline" size="sm" onClick={handleExport} className="flex items-center gap-1">
+          <Button variant="outline" size="sm" onClick={handleExport} className="flex items-center gap-1 shadow-sm">
             <Download className="h-4 w-4" />
             <span>Export</span>
           </Button>
         </div>
       </div>
       
-      <div className="rounded-md border overflow-x-auto">
+      <div className="rounded-md border overflow-x-auto shadow-md bg-white">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20">
             <TableRow>
               {columns.map((column) => (
                 <TableHead 
                   key={column.key}
-                  className="whitespace-nowrap cursor-pointer"
+                  className="whitespace-nowrap cursor-pointer hover:bg-blue-100/50 transition-colors"
                   onClick={() => handleSort(column.key)}
                 >
                   <div className="flex items-center">
@@ -242,7 +242,8 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
               sortedAndFilteredData.map((row, index) => (
                 <TableRow key={index} className={
                   cn(
-                    row.assignment_status === 'Unassigned' && 'bg-red-50 dark:bg-red-950/20',
+                    "hover:bg-sky-50/30 transition-colors",
+                    row.assignment_status === 'Unassigned' && 'bg-red-50/50 dark:bg-red-950/20',
                   )
                 }>
                   {columns.map((column) => (
