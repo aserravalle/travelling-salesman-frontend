@@ -1,120 +1,196 @@
-import React, { useState } from 'react';
-import { Upload, FileUp, AlertCircle } from 'lucide-react';
-import { parseFile } from '../utils/fileParser';
+
+import { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Upload, FileType2, Check, X, ArrowUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FileUploadProps {
-  onFileProcessed: (data: any[]) => void;
-  fileType: 'jobs' | 'salesmen';
+  onFilesSelected: (files: File[]) => void;
+  accept: string;
+  files: File[];
+  label?: string;
+  description?: string;
+  multiple?: boolean;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, fileType }) => {
+export const FileUpload = ({ 
+  onFilesSelected, 
+  accept, 
+  files, 
+  label = "Upload Files",
+  description = "Upload your Jobs and Salesmen files",
+  multiple = true
+}: FileUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+  const handleDragLeave = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      await processFile(files[0]);
+    if (e.dataTransfer.files.length) {
+      const droppedFiles = Array.from(e.dataTransfer.files).filter(file => isValidFileType(file));
+      if (droppedFiles.length > 0) {
+        onFilesSelected(droppedFiles);
+      }
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      await processFile(files[0]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) {
+      const selectedFiles = Array.from(e.target.files).filter(file => isValidFileType(file));
+      if (selectedFiles.length > 0) {
+        onFilesSelected(selectedFiles);
+      }
     }
   };
 
-  const processFile = async (file: File) => {
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    
-    if (extension !== 'csv' && extension !== 'xlsx' && extension !== 'xls') {
-      setError('Please upload a CSV or Excel file');
-      setFileName(null);
-      return;
-    }
+  const isValidFileType = (file: File) => {
+    const validTypes = accept.split(',').map(type => type.trim());
+    return validTypes.some(type => {
+      if (type.startsWith('.')) {
+        return file.name.toLowerCase().endsWith(type.toLowerCase());
+      } else {
+        return file.type === type;
+      }
+    });
+  };
 
-    setIsLoading(true);
-    setError(null);
-    setFileName(file.name);
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
 
-    try {
-      const data = await parseFile(file);
-      onFileProcessed(data);
-    } catch (error) {
-      console.error('Error parsing file:', error);
-      setError('Error parsing file. Please check the format and try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  const removeFile = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newFiles = [...files];
+    newFiles.splice(index, 1);
+    onFilesSelected(newFiles);
   };
 
   return (
-    <div className="w-full">
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-          isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => document.getElementById(`file-upload-${fileType}`)?.click()}
-      >
-        <input
-          id={`file-upload-${fileType}`}
-          type="file"
-          className="hidden"
-          accept=".csv,.xlsx,.xls"
-          onChange={handleFileChange}
-        />
-        
-        {isLoading ? (
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-            <p className="text-sm text-gray-500">Processing file...</p>
-          </div>
-        ) : fileName ? (
-          <div className="flex flex-col items-center">
-            <FileUp className="h-8 w-8 text-green-500 mb-2" />
-            <p className="text-sm font-medium text-gray-700">{fileName}</p>
-            <p className="text-xs text-gray-500 mt-1">File uploaded successfully</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center">
-            <Upload className="h-8 w-8 text-gray-400 mb-2" />
-            <p className="text-sm font-medium text-gray-700">
-              Upload {fileType === 'jobs' ? 'Jobs' : 'Salesmen'} File
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Drag and drop or click to select a CSV or Excel file
-            </p>
-          </div>
-        )}
-      </div>
-      
-      {error && (
-        <div className="mt-2 flex items-center text-red-500 text-sm">
-          <AlertCircle className="h-4 w-4 mr-1" />
-          <span>{error}</span>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="text-lg">{label}</CardTitle>
+        <CardDescription>
+          {description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div
+          className={cn(
+            "border-2 border-dashed rounded-lg p-10 cursor-pointer text-center transition-colors",
+            isDragging ? "border-primary bg-secondary/20" : "border-border hover:border-primary/50",
+            files.length > 0 ? "bg-secondary/10" : ""
+          )}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleClick}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept={accept}
+            multiple={multiple}
+            className="hidden"
+          />
+          
+          <AnimatePresence mode="wait">
+            {files.length > 0 ? (
+              <motion.div
+                key="file-info"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col items-center gap-4"
+              >
+                <div className="grid gap-3 w-full max-w-md">
+                  {files.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 rounded-md bg-background border">
+                      <FileType2 className="w-6 h-6 text-primary flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(file.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => removeFile(index, e)}
+                        className="rounded-full h-7 w-7"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                
+                {multiple && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2 flex items-center gap-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                    Add More Files
+                  </Button>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="file-upload"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col items-center gap-2"
+              >
+                <div className="p-4 rounded-full bg-secondary/50 mb-2">
+                  <Upload className="w-6 h-6 text-primary" />
+                </div>
+                <p className="font-medium">Drag and drop your files here</p>
+                <p className="text-sm text-muted-foreground">
+                  or click to browse files
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Supports CSV and Excel files
+                </p>
+                <p className="text-xs text-primary mt-1 font-medium">
+                  Smart detection will automatically identify Jobs and Salesmen data
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
-    </div>
+      </CardContent>
+      <CardFooter className="justify-between">
+        <div className="flex items-center gap-2">
+          {files.length > 0 && <Check className="w-4 h-4 text-green-500" />}
+          <span className="text-sm text-muted-foreground">
+            {files.length === 0 ? 'No files selected' : 
+             files.length === 1 ? '1 file ready for upload' : 
+             `${files.length} files ready for upload`}
+          </span>
+        </div>
+      </CardFooter>
+    </Card>
   );
 };
-
-export default FileUpload;
