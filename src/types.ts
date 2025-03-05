@@ -21,7 +21,7 @@ export interface Salesman {
 }
 
 export interface AssignedJob extends Job {
-  salesman_id: number | null;
+  salesman_id: string | null;
   start_time: string | null;
 }
 

@@ -2,10 +2,11 @@
 import { RosterRequest, RosterResponse } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 
-// Function to send job assignment request to backend
+const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || 'http://127.0.0.1:8000';
+
 export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> => {
   try {
-    const response = await fetch('https://travelling-salesman-backend.com/assign_jobs', {
+    const response = await fetch(API_ENDPOINT + '/assign_jobs', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -18,7 +19,8 @@ export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> =
     }
     
     return await response.json();
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error assigning jobs:', error);
     toast({
       title: 'Error',
@@ -26,7 +28,6 @@ export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> =
       variant: 'destructive',
     });
     
-    // TODO Add API Call
     return mockRosterResponse();
   }
 };
@@ -43,7 +44,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 60,
           entry_time: "2025-02-05T09:00:00",
           exit_time: "2025-02-05T12:00:00",
-          salesman_id: 101,
+          salesman_id: "101",
           start_time: "2025-02-05T09:30:00"
         },
         {
@@ -53,7 +54,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 30,
           entry_time: "2025-02-05T11:30:00",
           exit_time: "2025-02-05T13:00:00",
-          salesman_id: 101,
+          salesman_id: "101",
           start_time: "2025-02-05T11:30:00"
         },
         {
@@ -63,7 +64,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 45,
           entry_time: "2025-02-05T14:00:00",
           exit_time: "2025-02-05T16:30:00",
-          salesman_id: 101,
+          salesman_id: "101",
           start_time: "2025-02-05T14:15:00"
         }
       ],
@@ -75,7 +76,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 45,
           entry_time: "2025-02-05T10:30:00",
           exit_time: "2025-02-05T14:00:00",
-          salesman_id: 102,
+          salesman_id: "102",
           start_time: "2025-02-05T10:45:00"
         },
         {
@@ -85,7 +86,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 90,
           entry_time: "2025-02-05T12:30:00",
           exit_time: "2025-02-05T15:00:00",
-          salesman_id: 102,
+          salesman_id: "102",
           start_time: "2025-02-05T12:30:00"
         },
         {
@@ -95,7 +96,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 60,
           entry_time: "2025-02-05T15:00:00",
           exit_time: "2025-02-05T17:30:00",
-          salesman_id: 102,
+          salesman_id: "102",
           start_time: "2025-02-05T15:15:00"
         },
         {
@@ -105,7 +106,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 45,
           entry_time: "2025-02-05T16:30:00",
           exit_time: "2025-02-05T18:00:00",
-          salesman_id: 102,
+          salesman_id: "102",
           start_time: "2025-02-05T16:45:00"
         },
         {
@@ -115,7 +116,7 @@ const mockRosterResponse = (): RosterResponse => {
           duration_mins: 30,
           entry_time: "2025-02-05T17:45:00",
           exit_time: "2025-02-05T19:00:00",
-          salesman_id: 102,
+          salesman_id: "102",
           start_time: "2025-02-05T18:00:00"
         }
       ]

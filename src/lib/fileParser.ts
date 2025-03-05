@@ -49,14 +49,14 @@ export const parseExcel = async (file: File): Promise<any[]> => {
 export const processJobData = (data: any[]): Job[] => {
   return data.map(item => ({
     job_id: String(item.job_id),
-    date: item.date,
+    date: new Date(item.date).toISOString(),
     location: [
       parseFloat(item.latitude || item.location_latitude || item.location?.[0] || 0),
       parseFloat(item.longitude || item.location_longitude || item.location?.[1] || 0)
     ],
-    duration_mins: parseInt(item.duration_mins),
-    entry_time: item.entry_time,
-    exit_time: item.exit_time,
+    duration_mins: parseInt(item.duration_mins, 10),
+    entry_time: new Date(item.entry_time).toISOString(),
+    exit_time: new Date(item.exit_time).toISOString(),
   }));
 };
 
@@ -68,8 +68,8 @@ export const processSalesmanData = (data: any[]): Salesman[] => {
       parseFloat(item.home_latitude || item.home_location_latitude || item.home_location?.[0] || 0),
       parseFloat(item.home_longitude || item.home_location_longitude || item.home_location?.[1] || 0)
     ],
-    start_time: item.start_time,
-    end_time: item.end_time,
+    start_time: new Date(item.start_time).toISOString(),
+    end_time: new Date(item.end_time).toISOString(),
   }));
 };
 
