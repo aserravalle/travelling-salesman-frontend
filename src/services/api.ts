@@ -2,11 +2,11 @@
 import { RosterRequest, RosterResponse } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 
-const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || 'http://127.0.0.1:8000';
+const VITE_API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT_PRODUCTION || import.meta.env.VITE_API_ENDPOINT_DEBUG;
 
 export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> => {
   try {
-    const response = await fetch(API_ENDPOINT + '/assign_jobs', {
+    const response = await fetch(`${VITE_API_ENDPOINT}/assign_jobs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

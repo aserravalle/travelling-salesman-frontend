@@ -46,7 +46,7 @@ const Map = ({
   const [mapInitialized, setMapInitialized] = useState(false);
   
   // Get Mapbox token from environment variable or use fallback to input method
-  const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoibWFnaWNjaGlsaSIsImEiOiJjbTdvbzk1c3kwYzFqMmlyMXNrOXB6OXdhIn0.F3tvrN3bdMBuIZGc4GCdYA';
+  const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
   
   // Use filtered data if provided, otherwise use all data
   const displayData = filteredData || data;
