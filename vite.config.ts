@@ -19,4 +19,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  preview: {
+    allowedHosts: [process.env.VITE_ALLOWED_HOST || 'localhost']
+  }
 });
