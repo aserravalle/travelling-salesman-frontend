@@ -20,6 +20,6 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: [process.env.VITE_ALLOWED_HOST || 'localhost']
+    allowedHosts: ['travelling-salesman-frontend-production.up.railway.app']
   }
 });
