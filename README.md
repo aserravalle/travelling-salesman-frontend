@@ -1,7 +1,7 @@
 
 # Travelling Salesman Frontend
 
-A web application that optimizes job assignments for salesmen using the traveling salesman algorithm.
+A web application that optimizes job assignments for salesmen using the travelling salesman algorithm.
 
 ## Features
 
