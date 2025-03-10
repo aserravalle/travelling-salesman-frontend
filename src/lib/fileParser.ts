@@ -1,7 +1,7 @@
-
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { Job, Salesman, JobTableRow } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 // Function to parse CSV files
 export const parseCSV = (file: File): Promise<any[]> => {
@@ -9,8 +9,26 @@ export const parseCSV = (file: File): Promise<any[]> => {
     Papa.parse(file, {
       header: true,
       dynamicTyping: true,
+      skipEmptyLines: true,
       complete: (results) => {
-        resolve(results.data);
+        const validRows = results.data.filter(row => {
+          // Check if row is empty or all values are null/undefined
+          const isEmpty = Object.values(row).every(value => 
+            value === null || value === undefined || value === ''
+          );
+          return !isEmpty;
+        });
+
+        if (results.errors.length > 0) {
+          const errorCount = results.errors.length;
+          toast({
+            title: "Warning",
+            description: `${errorCount} line${errorCount > 1 ? 's' : ''} could not be read and were skipped`,
+            variant: "destructive"
+          });
+        }
+
+        resolve(validRows);
       },
       error: (error) => {
         reject(error);
@@ -31,7 +49,24 @@ export const parseExcel = async (file: File): Promise<any[]> => {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        resolve(jsonData);
+        
+        // Filter out empty rows
+        const validRows = jsonData.filter(row => {
+          return Object.values(row).some(value => 
+            value !== null && value !== undefined && value !== ''
+          );
+        });
+
+        if (jsonData.length > validRows.length) {
+          const skippedRows = jsonData.length - validRows.length;
+          toast({
+            title: "Warning",
+            description: `${skippedRows} empty row${skippedRows > 1 ? 's were' : ' was'} skipped`,
+            variant: "destructive"
+          });
+        }
+
+        resolve(validRows);
       } catch (error) {
         reject(error);
       }
@@ -47,30 +82,86 @@ export const parseExcel = async (file: File): Promise<any[]> => {
 
 // Process job data from parsed file
 export const processJobData = (data: any[]): Job[] => {
-  return data.map(item => ({
-    job_id: String(item.job_id),
-    date: new Date(item.date).toISOString(),
-    location: [
-      parseFloat(item.latitude || item.location_latitude || item.location?.[0] || 0),
-      parseFloat(item.longitude || item.location_longitude || item.location?.[1] || 0)
-    ],
-    duration_mins: parseInt(item.duration_mins, 10),
-    entry_time: new Date(item.entry_time).toISOString(),
-    exit_time: new Date(item.exit_time).toISOString(),
-  }));
+  const validJobs: Job[] = [];
+  let invalidCount = 0;
+
+  data.forEach(item => {
+    try {
+      const job: Job = {
+        job_id: String(item.job_id),
+        date: new Date(item.date).toISOString(),
+        location: [
+          parseFloat(item.latitude || item.location_latitude || item.location?.[0] || 0),
+          parseFloat(item.longitude || item.location_longitude || item.location?.[1] || 0)
+        ],
+        duration_mins: parseInt(item.duration_mins, 10),
+        entry_time: new Date(item.entry_time).toISOString(),
+        exit_time: new Date(item.exit_time).toISOString(),
+      };
+
+      // Validate required fields
+      if (!job.job_id || isNaN(job.location[0]) || isNaN(job.location[1]) || 
+          isNaN(job.duration_mins) || job.date === 'Invalid Date' || 
+          job.entry_time === 'Invalid Date' || job.exit_time === 'Invalid Date') {
+        throw new Error('Invalid job data');
+      }
+
+      validJobs.push(job);
+    } catch (error) {
+      invalidCount++;
+    }
+  });
+
+  if (invalidCount > 0) {
+    toast({
+      title: "Warning",
+      description: `${invalidCount} invalid job record${invalidCount > 1 ? 's were' : ' was'} skipped`,
+      variant: "destructive"
+    });
+  }
+
+  return validJobs;
 };
 
 // Process salesman data from parsed file
 export const processSalesmanData = (data: any[]): Salesman[] => {
-  return data.map(item => ({
-    salesman_id: String(item.salesman_id),
-    home_location: [
-      parseFloat(item.home_latitude || item.home_location_latitude || item.home_location?.[0] || 0),
-      parseFloat(item.home_longitude || item.home_location_longitude || item.home_location?.[1] || 0)
-    ],
-    start_time: new Date(item.start_time).toISOString(),
-    end_time: new Date(item.end_time).toISOString(),
-  }));
+  const validSalesmen: Salesman[] = [];
+  let invalidCount = 0;
+
+  data.forEach(item => {
+    try {
+      const salesman: Salesman = {
+        salesman_id: String(item.salesman_id),
+        home_location: [
+          parseFloat(item.home_latitude || item.home_location_latitude || item.home_location?.[0] || 0),
+          parseFloat(item.home_longitude || item.home_location_longitude || item.home_location?.[1] || 0)
+        ],
+        start_time: new Date(item.start_time).toISOString(),
+        end_time: new Date(item.end_time).toISOString(),
+      };
+
+      // Validate required fields
+      if (!salesman.salesman_id || isNaN(salesman.home_location[0]) || 
+          isNaN(salesman.home_location[1]) || salesman.start_time === 'Invalid Date' || 
+          salesman.end_time === 'Invalid Date') {
+        throw new Error('Invalid salesman data');
+      }
+
+      validSalesmen.push(salesman);
+    } catch (error) {
+      invalidCount++;
+    }
+  });
+
+  if (invalidCount > 0) {
+    toast({
+      title: "Warning",
+      description: `${invalidCount} invalid salesman record${invalidCount > 1 ? 's were' : ' was'} skipped`,
+      variant: "destructive"
+    });
+  }
+
+  return validSalesmen;
 };
 
 // Convert assignment response to table rows

@@ -37,7 +37,7 @@ const Index = () => {
     }
 
     setIsProcessingFiles(true);
-    
+
     try {
       for (const file of files) {
         let rawData;
@@ -69,15 +69,17 @@ const Index = () => {
                                 ('salesman_id' in firstRow && ('home_latitude' in firstRow || 'home_longitude' in firstRow));
         
         if (hasJobFields) {
+          // setParsedJobs([]); // Overwrite existing data
           const processedJobs = processJobData(rawData);
-          setParsedJobs(prev => [...prev, ...processedJobs]);
+          setParsedJobs(processedJobs);
           toast({
             title: "Jobs file processed",
             description: `Successfully parsed ${processedJobs.length} jobs from ${file.name}`,
           });
         } else if (hasSalesmanFields) {
+          // setParsedSalesmen([]); // Overwrite existing data
           const processedSalesmen = processSalesmanData(rawData);
-          setParsedSalesmen(prev => [...prev, ...processedSalesmen]);
+          setParsedSalesmen(processedSalesmen);
           toast({
             title: "Salesmen file processed",
             description: `Successfully parsed ${processedSalesmen.length} salesmen from ${file.name}`,
@@ -98,14 +100,14 @@ const Index = () => {
           
           if (jobScore > salesmanScore) {
             const processedJobs = processJobData(rawData);
-            setParsedJobs(prev => [...prev, ...processedJobs]);
+            setParsedJobs(processedJobs);
             toast({
               title: "Jobs file detected",
               description: `Identified and parsed ${processedJobs.length} jobs from ${file.name}`,
             });
           } else if (salesmanScore > jobScore) {
             const processedSalesmen = processSalesmanData(rawData);
-            setParsedSalesmen(prev => [...prev, ...processedSalesmen]);
+            setParsedSalesmen(processedSalesmen);
             toast({
               title: "Salesmen file detected",
               description: `Identified and parsed ${processedSalesmen.length} salesmen from ${file.name}`,
