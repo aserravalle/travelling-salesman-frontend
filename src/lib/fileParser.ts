@@ -2,6 +2,7 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { Job, Salesman, JobTableRow } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { parse, format } from 'date-fns';
 
 // Function to parse CSV files
 export const parseCSV = (file: File): Promise<any[]> => {
@@ -89,14 +90,14 @@ export const processJobData = (data: any[]): Job[] => {
     try {
       const job: Job = {
         job_id: String(item.job_id),
-        date: new Date(item.date).toISOString(),
+        date: format(parse(item.date, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
         location: [
           parseFloat(item.latitude || item.location_latitude || item.location?.[0] || 0),
           parseFloat(item.longitude || item.location_longitude || item.location?.[1] || 0)
         ],
         duration_mins: parseInt(item.duration_mins, 10),
-        entry_time: new Date(item.entry_time).toISOString(),
-        exit_time: new Date(item.exit_time).toISOString(),
+        entry_time: format(parse(item.entry_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
+        exit_time: format(parse(item.exit_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
       };
 
       // Validate required fields
@@ -136,8 +137,8 @@ export const processSalesmanData = (data: any[]): Salesman[] => {
           parseFloat(item.home_latitude || item.home_location_latitude || item.home_location?.[0] || 0),
           parseFloat(item.home_longitude || item.home_location_longitude || item.home_location?.[1] || 0)
         ],
-        start_time: new Date(item.start_time).toISOString(),
-        end_time: new Date(item.end_time).toISOString(),
+        start_time: format(parse(item.start_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
+        end_time: format(parse(item.end_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
       };
 
       // Validate required fields

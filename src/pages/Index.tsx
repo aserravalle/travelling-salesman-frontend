@@ -69,7 +69,6 @@ const Index = () => {
                                 ('salesman_id' in firstRow && ('home_latitude' in firstRow || 'home_longitude' in firstRow));
         
         if (hasJobFields) {
-          // setParsedJobs([]); // Overwrite existing data
           const processedJobs = processJobData(rawData);
           setParsedJobs(processedJobs);
           toast({
@@ -77,7 +76,6 @@ const Index = () => {
             description: `Successfully parsed ${processedJobs.length} jobs from ${file.name}`,
           });
         } else if (hasSalesmanFields) {
-          // setParsedSalesmen([]); // Overwrite existing data
           const processedSalesmen = processSalesmanData(rawData);
           setParsedSalesmen(processedSalesmen);
           toast({
