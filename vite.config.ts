@@ -8,7 +8,7 @@ dotenv.config();
 export default defineConfig({
   server: {
     host: "::",
-    port: 8080,
+    port: Number(process.env.PORT) || 8080,
   },
   plugins: [react()],
   define: {
@@ -20,6 +20,6 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: ['travelling-salesman-frontend-production.up.railway.app']
+    allowedHosts: [process.env.VITE_ALLOWED_HOSTS || 'localhost']
   }
 });
