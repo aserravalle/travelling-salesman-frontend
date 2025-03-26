@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import {
   Table, 
@@ -31,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { exportTableToCSV, downloadCSV } from '@/lib/fileParser';
+import { exportTableToCSV, downloadCSV, formatDisplayDate, formatDisplayTime } from '@/lib/fileParser';
 import { JobTableRow } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -246,14 +245,25 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
                     row.assignment_status === 'Unassigned' && 'bg-red-50/50 dark:bg-red-950/20',
                   )
                 }>
-                  {columns.map((column) => (
-                    <TableCell 
-                      key={`${index}-${column.key}`} 
-                      className="whitespace-nowrap"
-                    >
-                      {row[column.key] !== null ? String(row[column.key]) : '-'}
-                    </TableCell>
-                  ))}
+                  {columns.map((column) => {
+                    let cellContent = row[column.key];
+                    
+                    // Format dates and times
+                    if (column.key === 'date') {
+                      cellContent = formatDisplayDate(row.date);
+                    } else if (['entry_time', 'exit_time', 'start_time'].includes(column.key) && cellContent) {
+                      cellContent = formatDisplayTime(String(cellContent));
+                    }
+                    
+                    return (
+                      <TableCell 
+                        key={`${index}-${column.key}`} 
+                        className="whitespace-nowrap"
+                      >
+                        {cellContent !== null ? String(cellContent) : '-'}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             )}

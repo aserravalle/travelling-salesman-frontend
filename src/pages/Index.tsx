@@ -6,13 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { parseCSV, parseExcel, processJobData, processSalesmanData, convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/fileParser';
+import { parseCSV, parseExcel, processJobData, processSalesmanData, convertResponseToTableRows, exportTableToCSV, downloadCSV, formatDisplayDate, formatDisplayTime } from '@/lib/fileParser';
 import { assignJobs } from '@/services/api';
 import { fadeIn, staggerContainer } from '@/lib/motion';
 import { Job, Salesman, RosterRequest, JobTableRow } from '@/types';
 import { ArrowRight, Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import Map from '@/components/Map';
 import StatusBanner from '@/components/StatusBanner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Index = () => {
   const { toast } = useToast();
@@ -316,11 +324,11 @@ const Index = () => {
                             {parsedJobs.map((job, index) => (
                               <TableRow key={index}>
                                 <TableCell>{job.job_id}</TableCell>
-                                <TableCell>{new Date(job.date).toLocaleDateString()}</TableCell>
+                                <TableCell>{formatDisplayDate(job.date)}</TableCell>
                                 <TableCell>[{job.location[0].toFixed(4)}, {job.location[1].toFixed(4)}]</TableCell>
                                 <TableCell>{job.duration_mins} mins</TableCell>
-                                <TableCell>{new Date(job.entry_time).toLocaleTimeString()}</TableCell>
-                                <TableCell>{new Date(job.exit_time).toLocaleTimeString()}</TableCell>
+                                <TableCell>{formatDisplayTime(job.entry_time)}</TableCell>
+                                <TableCell>{formatDisplayTime(job.exit_time)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -369,8 +377,8 @@ const Index = () => {
                               <TableRow key={index}>
                                 <TableCell>{salesman.salesman_id}</TableCell>
                                 <TableCell>[{salesman.home_location[0].toFixed(4)}, {salesman.home_location[1].toFixed(4)}]</TableCell>
-                                <TableCell>{new Date(salesman.start_time).toLocaleTimeString()}</TableCell>
-                                <TableCell>{new Date(salesman.end_time).toLocaleTimeString()}</TableCell>
+                                <TableCell>{formatDisplayTime(salesman.start_time)}</TableCell>
+                                <TableCell>{formatDisplayTime(salesman.end_time)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -500,15 +508,5 @@ const Index = () => {
     </div>
   );
 };
-
-// Import React components from UI library
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export default Index;

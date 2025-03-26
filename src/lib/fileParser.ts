@@ -165,6 +165,18 @@ export const processSalesmanData = (data: any[]): Salesman[] => {
   return validSalesmen;
 };
 
+// Format date for display
+export const formatDisplayDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return format(date, 'dd MMMM yyyy');
+};
+
+// Format time for display
+export const formatDisplayTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return format(date, 'HH:mm');
+};
+
 // Convert assignment response to table rows
 export const convertResponseToTableRows = (response: any): JobTableRow[] => {
   const rows: JobTableRow[] = [];
