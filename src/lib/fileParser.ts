@@ -22,9 +22,19 @@ export const parseCSV = (file: File): Promise<any[]> => {
 
         if (results.errors.length > 0) {
           const errorCount = results.errors.length;
+          const errorMessages = results.errors.map(err => 
+            `Line ${err.row + 1}: ${err.message}`
+          ).join('\n');
+          
+          console.error('CSV Parse Errors:', {
+            errorCount,
+            errors: results.errors,
+            errorMessages
+          });
+
           toast({
             title: "Warning",
-            description: `${errorCount} line${errorCount > 1 ? 's' : ''} could not be read and were skipped`,
+            description: `${errorCount} line${errorCount > 1 ? 's' : ''} could not be read and were skipped.\n\nErrors:\n${errorMessages}`,
             variant: "destructive"
           });
         }
@@ -60,6 +70,13 @@ export const parseExcel = async (file: File): Promise<any[]> => {
 
         if (jsonData.length > validRows.length) {
           const skippedRows = jsonData.length - validRows.length;
+          console.error('Excel Parse Warning:', {
+            skippedRows,
+            totalRows: jsonData.length,
+            validRows: validRows.length,
+            message: 'Empty rows detected and skipped'
+          });
+          
           toast({
             title: "Warning",
             description: `${skippedRows} empty row${skippedRows > 1 ? 's were' : ' was'} skipped`,
@@ -69,6 +86,12 @@ export const parseExcel = async (file: File): Promise<any[]> => {
 
         resolve(validRows);
       } catch (error) {
+        console.error('Excel Parse Error:', {
+          error,
+          fileName: file.name,
+          fileSize: file.size,
+          message: 'Failed to parse Excel file'
+        });
         reject(error);
       }
     };
@@ -86,7 +109,7 @@ export const processJobData = (data: any[]): Job[] => {
   const validJobs: Job[] = [];
   let invalidCount = 0;
 
-  data.forEach(item => {
+  data.forEach((item, index) => {
     try {
       const job: Job = {
         job_id: String(item.job_id),
@@ -109,11 +132,24 @@ export const processJobData = (data: any[]): Job[] => {
 
       validJobs.push(job);
     } catch (error) {
+      console.error('Job Processing Error:', {
+        error,
+        recordIndex: index,
+        record: item,
+        message: 'Failed to process job record'
+      });
       invalidCount++;
     }
   });
 
   if (invalidCount > 0) {
+    console.error('Job Processing Warning:', {
+      invalidCount,
+      totalRecords: data.length,
+      validRecords: validJobs.length,
+      message: 'Invalid job records detected and skipped'
+    });
+
     toast({
       title: "Warning",
       description: `${invalidCount} invalid job record${invalidCount > 1 ? 's were' : ' was'} skipped`,
@@ -129,7 +165,7 @@ export const processSalesmanData = (data: any[]): Salesman[] => {
   const validSalesmen: Salesman[] = [];
   let invalidCount = 0;
 
-  data.forEach(item => {
+  data.forEach((item, index) => {
     try {
       const salesman: Salesman = {
         salesman_id: String(item.salesman_id),
@@ -150,11 +186,24 @@ export const processSalesmanData = (data: any[]): Salesman[] => {
 
       validSalesmen.push(salesman);
     } catch (error) {
+      console.error('Salesman Processing Error:', {
+        error,
+        recordIndex: index,
+        record: item,
+        message: 'Failed to process salesman record'
+      });
       invalidCount++;
     }
   });
 
   if (invalidCount > 0) {
+    console.error('Salesman Processing Warning:', {
+      invalidCount,
+      totalRecords: data.length,
+      validRecords: validSalesmen.length,
+      message: 'Invalid salesman records detected and skipped'
+    });
+
     toast({
       title: "Warning",
       description: `${invalidCount} invalid salesman record${invalidCount > 1 ? 's were' : ' was'} skipped`,

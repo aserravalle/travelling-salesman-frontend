@@ -35,7 +35,7 @@ import { JobTableRow } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface Column {
-  key: keyof JobTableRow;
+  key: string;
   label: string;
 }
 
@@ -46,7 +46,7 @@ interface DataTableProps {
 }
 
 export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTableProps) => {
-  const [sortBy, setSortBy] = useState<keyof JobTableRow>('job_id');
+  const [sortBy, setSortBy] = useState<string>('job_id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -54,6 +54,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
 
   // List of columns to display
   const columns: Column[] = [
+    // Required columns
     { key: 'job_id', label: 'Job ID' },
     { key: 'date', label: 'Date' },
     { key: 'latitude', label: 'Latitude' },
@@ -64,6 +65,15 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
     { key: 'assignment_status', label: 'Status' },
     { key: 'salesman_id', label: 'Salesman ID' },
     { key: 'start_time', label: 'Start Time' },
+    
+    // Check if ANY row has these optional properties before adding the column
+    ...(data.some(row => 'name' in row) ? [{ key: 'name', label: 'Name' }] : []),
+    ...(data.some(row => 'customer' in row) ? [{ key: 'customer', label: 'Customer' }] : []),
+    ...(data.some(row => 'address' in row) ? [{ key: 'address', label: 'Address' }] : []),
+    ...(data.some(row => 'suburb' in row) ? [{ key: 'suburb', label: 'Suburb' }] : []),
+    ...(data.some(row => 'postcode' in row) ? [{ key: 'postcode', label: 'Postcode' }] : []),
+    ...(data.some(row => 'city' in row) ? [{ key: 'city', label: 'City' }] : []),
+    ...(data.some(row => 'country' in row) ? [{ key: 'country', label: 'Country' }] : []),
   ];
 
   // Get unique salesman IDs for filtering
@@ -102,8 +112,12 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
 
     // Then sort
     return filteredData.sort((a, b) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
+      const aValue = a[sortBy as keyof typeof a];
+      const bValue = b[sortBy as keyof typeof b];
+      
+      if (aValue === undefined && bValue === undefined) return 0;
+      if (aValue === undefined) return sortDirection === 'asc' ? 1 : -1;
+      if (bValue === undefined) return sortDirection === 'asc' ? -1 : 1;
       
       if (aValue === null && bValue === null) return 0;
       if (aValue === null) return sortDirection === 'asc' ? 1 : -1;
@@ -129,7 +143,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
   }, [sortedAndFilteredData, onFilteredDataChange]);
 
   // Toggle sort direction or change sort column
-  const handleSort = (column: keyof JobTableRow) => {
+  const handleSort = (column: string) => {
     if (sortBy === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -149,7 +163,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
   };
 
   // Render sort indicator
-  const renderSortIndicator = (column: keyof JobTableRow) => {
+  const renderSortIndicator = (column: string) => {
     if (sortBy !== column) return null;
     return sortDirection === 'asc' ? 
       <ChevronUp className="w-4 h-4 ml-1" /> : 
@@ -246,7 +260,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
                   )
                 }>
                   {columns.map((column) => {
-                    let cellContent = row[column.key];
+                    let cellContent = row[column.key as keyof typeof row] ?? null;
                     
                     // Format dates and times
                     if (column.key === 'date') {

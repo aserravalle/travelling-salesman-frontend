@@ -47,4 +47,12 @@ export interface JobTableRow {
   assignment_status: string;
   salesman_id: string | null;
   start_time: string | null;
+  
+  name?: string;
+  customer?: string;
+  address?: string;
+  suburb?: string;
+  postcode?: string;
+  city?: string;
+  country?: string;
 }
