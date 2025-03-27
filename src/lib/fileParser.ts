@@ -1,238 +1,467 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import { Job, Salesman, JobTableRow } from '@/types';
-import { toast } from '@/components/ui/use-toast';
-import { parse, format } from 'date-fns';
+import { Job, Salesman, RosterResponse, JobTableRow } from '@/types';
+import { format, parse as parseDate, isValid } from 'date-fns';
+import { matchColumns, type DatasetType, type MatchResult } from './columnMatcher';
 
-// Function to parse CSV files
-export const parseCSV = (file: File): Promise<any[]> => {
-  return new Promise((resolve, reject) => {
-    Papa.parse(file, {
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const validRows = results.data.filter(row => {
-          // Check if row is empty or all values are null/undefined
-          const isEmpty = Object.values(row).every(value => 
-            value === null || value === undefined || value === ''
-          );
-          return !isEmpty;
+export interface ParseError {
+  row?: number;
+  column?: string;
+  message: string;
+  details?: any; // For additional error context
+}
+
+export interface ParseResult<T> {
+  data: T[];
+  type: DatasetType;
+  skippedRows: number;
+  errors: ParseError[];
+}
+
+export interface ReadResult {
+  data: any[];
+  fileName: string;
+  errors: ParseError[];
+  debug?: any; // For additional debug information
+}
+
+// Read file and return raw data
+export const readFile = async (file: File): Promise<ReadResult> => {
+  console.log(`[FileParser] Reading file: ${file.name} (${file.type}, ${file.size} bytes)`);
+  
+  try {
+    let rawData: any[] = [];
+    let errors: ParseError[] = [];
+    let debug: any = {};
+
+    if (file.name.endsWith('.csv')) {
+      console.log('[FileParser] Processing CSV file');
+      const result = await new Promise<Papa.ParseResult<any>>((resolve, reject) => {
+        Papa.parse(file, {
+          header: true,
+          dynamicTyping: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            console.log('[FileParser] CSV parsing complete:', {
+              rowCount: results.data.length,
+              fields: results.meta.fields,
+              errors: results.errors
+            });
+            resolve(results);
+          },
+          error: (error) => {
+            console.error('[FileParser] CSV parsing error:', error);
+            reject(error);
+          }
         });
+      });
 
-        if (results.errors.length > 0) {
-          const errorCount = results.errors.length;
-          const errorMessages = results.errors.map(err => 
-            `Line ${err.row + 1}: ${err.message}`
-          ).join('\n');
-          
-          console.error('CSV Parse Errors:', {
-            errorCount,
-            errors: results.errors,
-            errorMessages
-          });
-
-          toast({
-            title: "Warning",
-            description: `${errorCount} line${errorCount > 1 ? 's' : ''} could not be read and were skipped.\n\nErrors:\n${errorMessages}`,
-            variant: "destructive"
-          });
-        }
-
-        resolve(validRows);
-      },
-      error: (error) => {
-        reject(error);
+      rawData = result.data;
+      debug.csvMeta = result.meta;
+      
+      if (result.errors.length > 0) {
+        console.warn('[FileParser] CSV parse errors:', result.errors);
+        errors = result.errors.map(err => ({
+          row: err.row,
+          message: err.message,
+          details: err
+        }));
       }
-    });
-  });
-};
+    } 
+    else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      console.log('[FileParser] Processing Excel file');
+      const data = await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
+        reader.onerror = (e) => {
+          console.error('[FileParser] Excel file read error:', e);
+          reject(e);
+        };
+        reader.readAsArrayBuffer(file);
+      });
 
-// Function to parse Excel files
-export const parseExcel = async (file: File): Promise<any[]> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        
-        // Filter out empty rows
-        const validRows = jsonData.filter(row => {
-          return Object.values(row).some(value => 
-            value !== null && value !== undefined && value !== ''
-          );
-        });
+      const workbook = XLSX.read(data, { type: 'array' });
+      console.log('[FileParser] Excel workbook loaded:', {
+        sheets: workbook.SheetNames,
+        props: workbook.Props
+      });
 
-        if (jsonData.length > validRows.length) {
-          const skippedRows = jsonData.length - validRows.length;
-          console.error('Excel Parse Warning:', {
-            skippedRows,
-            totalRows: jsonData.length,
-            validRows: validRows.length,
-            message: 'Empty rows detected and skipped'
-          });
-          
-          toast({
-            title: "Warning",
-            description: `${skippedRows} empty row${skippedRows > 1 ? 's were' : ' was'} skipped`,
-            variant: "destructive"
-          });
-        }
-
-        resolve(validRows);
-      } catch (error) {
-        console.error('Excel Parse Error:', {
-          error,
-          fileName: file.name,
-          fileSize: file.size,
-          message: 'Failed to parse Excel file'
-        });
-        reject(error);
-      }
-    };
-    
-    reader.onerror = (error) => {
-      reject(error);
-    };
-    
-    reader.readAsBinaryString(file);
-  });
-};
-
-// Process job data from parsed file
-export const processJobData = (data: any[]): Job[] => {
-  const validJobs: Job[] = [];
-  let invalidCount = 0;
-
-  data.forEach((item, index) => {
-    try {
-      const job: Job = {
-        job_id: String(item.job_id),
-        date: format(parse(item.date, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
-        location: [
-          parseFloat(item.latitude || item.location_latitude || item.location?.[0] || 0),
-          parseFloat(item.longitude || item.location_longitude || item.location?.[1] || 0)
-        ],
-        duration_mins: parseInt(item.duration_mins, 10),
-        entry_time: format(parse(item.entry_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
-        exit_time: format(parse(item.exit_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      debug.excelMeta = {
+        sheetName: workbook.SheetNames[0],
+        range: worksheet['!ref'],
+        dimensions: worksheet['!dimensions']
       };
 
-      // Validate required fields
-      if (!job.job_id || isNaN(job.location[0]) || isNaN(job.location[1]) || 
-          isNaN(job.duration_mins) || job.date === 'Invalid Date' || 
-          job.entry_time === 'Invalid Date' || job.exit_time === 'Invalid Date') {
-        throw new Error('Invalid job data');
-      }
-
-      validJobs.push(job);
-    } catch (error) {
-      console.error('Job Processing Error:', {
-        error,
-        recordIndex: index,
-        record: item,
-        message: 'Failed to process job record'
+      rawData = XLSX.utils.sheet_to_json(worksheet);
+      console.log('[FileParser] Excel data converted to JSON:', {
+        rowCount: rawData.length,
+        sampleRow: rawData[0]
       });
-      invalidCount++;
+    } 
+    else {
+      const error = new Error('Unsupported file format');
+      console.error('[FileParser] Unsupported format:', file.type);
+      throw error;
     }
-  });
 
-  if (invalidCount > 0) {
-    console.error('Job Processing Warning:', {
-      invalidCount,
-      totalRecords: data.length,
-      validRecords: validJobs.length,
-      message: 'Invalid job records detected and skipped'
+    // Filter out empty rows
+    const validRows = rawData.filter(row => {
+      const hasValues = Object.values(row).some(value => 
+        value !== null && value !== undefined && value !== ''
+      );
+      if (!hasValues) {
+        console.debug('[FileParser] Skipping empty row:', row);
+      }
+      return hasValues;
     });
 
-    toast({
-      title: "Warning",
-      description: `${invalidCount} invalid job record${invalidCount > 1 ? 's were' : ' was'} skipped`,
-      variant: "destructive"
+    const skippedRows = rawData.length - validRows.length;
+    if (skippedRows > 0) {
+      console.warn(`[FileParser] Skipped ${skippedRows} empty rows`);
+      errors.push({
+        message: `${skippedRows} empty row${skippedRows > 1 ? 's were' : ' was'} skipped`,
+        details: { skippedRows }
+      });
+    }
+
+    console.log('[FileParser] File processing complete:', {
+      fileName: file.name,
+      totalRows: rawData.length,
+      validRows: validRows.length,
+      skippedRows,
+      errorCount: errors.length
     });
+
+    return {
+      data: validRows,
+      fileName: file.name,
+      errors,
+      debug
+    };
+  } catch (error) {
+    console.error('[FileParser] File processing error:', {
+      fileName: file.name,
+      error
+    });
+
+    return {
+      data: [],
+      fileName: file.name,
+      errors: [{
+        message: error instanceof Error ? error.message : 'Unknown error occurred while reading file',
+        details: error
+      }]
+    };
   }
-
-  return validJobs;
 };
 
-// Process salesman data from parsed file
-export const processSalesmanData = (data: any[]): Salesman[] => {
-  const validSalesmen: Salesman[] = [];
-  let invalidCount = 0;
+// Parse raw data into typed objects
+export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
+  console.log('[FileParser] Starting data parsing:', {
+    rowCount: rawData.length,
+    firstRow: rawData[0]
+  });
 
-  data.forEach((item, index) => {
+  if (!rawData.length) {
+    console.warn('[FileParser] No data to parse');
+    return {
+      data: [],
+      type: 'unknown',
+      skippedRows: 0,
+      errors: [{
+        message: 'No data to parse'
+      }]
+    };
+  }
+
+  const columns = Object.keys(rawData[0]);
+  console.log('[FileParser] Detected columns:', columns);
+
+  const matchResult = matchColumns(columns);
+  console.log('[FileParser] Column matching result:', {
+    type: matchResult.type,
+    score: matchResult.score,
+    matches: matchResult.columnMatches
+  });
+
+  const errors: ParseError[] = [];
+  const parsedData: (Job | Salesman)[] = [];
+  let skippedRows = 0;
+
+  if (matchResult.type === 'unknown' || matchResult.score < 0.5) {
+    console.error('[FileParser] Unable to identify dataset type:', {
+      score: matchResult.score,
+      requiredColumns: matchResult.type === 'job' ? 
+        Object.keys(matchResult.columnMatches) : 
+        Object.keys(matchResult.columnMatches)
+    });
+
+    return {
+      data: [],
+      type: 'unknown',
+      skippedRows: 0,
+      errors: [{
+        message: `Unable to identify dataset type. Match score: ${matchResult.score}`,
+        details: matchResult
+      }]
+    };
+  }
+
+  for (let i = 0; i < rawData.length; i++) {
     try {
-      const salesman: Salesman = {
-        salesman_id: String(item.salesman_id),
-        home_location: [
-          parseFloat(item.home_latitude || item.home_location_latitude || item.home_location?.[0] || 0),
-          parseFloat(item.home_longitude || item.home_location_longitude || item.home_location?.[1] || 0)
-        ],
-        start_time: format(parse(item.start_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
-        end_time: format(parse(item.end_time, 'dd-MM-yyyy HH:mm', new Date()), 'yyyy-MM-dd HH:mm:ss'),
-      };
-
-      // Validate required fields
-      if (!salesman.salesman_id || isNaN(salesman.home_location[0]) || 
-          isNaN(salesman.home_location[1]) || salesman.start_time === 'Invalid Date' || 
-          salesman.end_time === 'Invalid Date') {
-        throw new Error('Invalid salesman data');
+      const row = rawData[i];
+      console.debug(`[FileParser] Processing row ${i + 1}:`, row);
+      
+      if (matchResult.type === 'job') {
+        const job = parseJobRow(row, matchResult, i);
+        parsedData.push(job);
+        console.debug(`[FileParser] Successfully parsed job:`, job);
+      } else {
+        const salesman = parseSalesmanRow(row, matchResult, i);
+        parsedData.push(salesman);
+        console.debug(`[FileParser] Successfully parsed salesman:`, salesman);
       }
-
-      validSalesmen.push(salesman);
     } catch (error) {
-      console.error('Salesman Processing Error:', {
-        error,
-        recordIndex: index,
-        record: item,
-        message: 'Failed to process salesman record'
+      skippedRows++;
+      console.error(`[FileParser] Error parsing row ${i + 1}:`, {
+        row: rawData[i],
+        error
       });
-      invalidCount++;
+
+      errors.push({
+        row: i + 1,
+        message: error instanceof Error ? error.message : 'Unknown error parsing row',
+        details: {
+          row: rawData[i],
+          error
+        }
+      });
     }
-  });
-
-  if (invalidCount > 0) {
-    console.error('Salesman Processing Warning:', {
-      invalidCount,
-      totalRecords: data.length,
-      validRecords: validSalesmen.length,
-      message: 'Invalid salesman records detected and skipped'
-    });
-
-    toast({
-      title: "Warning",
-      description: `${invalidCount} invalid salesman record${invalidCount > 1 ? 's were' : ' was'} skipped`,
-      variant: "destructive"
-    });
   }
 
-  return validSalesmen;
+  console.log('[FileParser] Parsing complete:', {
+    type: matchResult.type,
+    totalRows: rawData.length,
+    parsedRows: parsedData.length,
+    skippedRows,
+    errorCount: errors.length
+  });
+
+  return {
+    data: parsedData as any[],
+    type: matchResult.type,
+    skippedRows,
+    errors
+  };
 };
+
+function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job {
+  const { columnMatches } = matchResult;
+  
+  try {
+    console.debug(`[FileParser] Parsing job row ${rowIndex + 1}:`, {
+      row,
+      columnMatches
+    });
+
+    const latitude = parseFloat(row[columnMatches.latitude]);
+    const longitude = parseFloat(row[columnMatches.longitude]);
+    
+    if (isNaN(latitude) || isNaN(longitude)) {
+      console.error(`[FileParser] Invalid coordinates in row ${rowIndex + 1}:`, {
+        latitude,
+        longitude,
+        rawLat: row[columnMatches.latitude],
+        rawLng: row[columnMatches.longitude]
+      });
+      throw new Error('Invalid location coordinates');
+    }
+
+    const duration = parseInt(row[columnMatches.duration_mins]);
+    if (isNaN(duration)) {
+      console.error(`[FileParser] Invalid duration in row ${rowIndex + 1}:`, {
+        duration,
+        raw: row[columnMatches.duration_mins]
+      });
+      throw new Error('Invalid duration');
+    }
+
+    const job: Job = {
+      job_id: String(row[columnMatches.job_id]),
+      date: formatDateTime(row[columnMatches.date]),
+      location: [latitude, longitude],
+      duration_mins: duration,
+      entry_time: formatDateTime(row[columnMatches.entry_time]),
+      exit_time: formatDateTime(row[columnMatches.exit_time])
+    };
+
+    validateRequiredFields(job, rowIndex);
+    return job;
+  } catch (error) {
+    console.error(`[FileParser] Error parsing job row ${rowIndex + 1}:`, {
+      row,
+      error
+    });
+    throw new Error(`Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`);
+  }
+}
+
+function parseSalesmanRow(row: any, matchResult: MatchResult, rowIndex: number): Salesman {
+  const { columnMatches } = matchResult;
+  
+  try {
+    console.debug(`[FileParser] Parsing salesman row ${rowIndex + 1}:`, {
+      row,
+      columnMatches
+    });
+
+    const latitude = parseFloat(row[columnMatches.home_latitude]);
+    const longitude = parseFloat(row[columnMatches.home_longitude]);
+    
+    if (isNaN(latitude) || isNaN(longitude)) {
+      console.error(`[FileParser] Invalid home coordinates in row ${rowIndex + 1}:`, {
+        latitude,
+        longitude,
+        rawLat: row[columnMatches.home_latitude],
+        rawLng: row[columnMatches.home_longitude]
+      });
+      throw new Error('Invalid home location coordinates');
+    }
+
+    const salesman: Salesman = {
+      salesman_id: String(row[columnMatches.salesman_id]),
+      home_location: [latitude, longitude],
+      start_time: formatDateTime(row[columnMatches.start_time]),
+      end_time: formatDateTime(row[columnMatches.end_time])
+    };
+
+    validateRequiredFields(salesman, rowIndex);
+    return salesman;
+  } catch (error) {
+    console.error(`[FileParser] Error parsing salesman row ${rowIndex + 1}:`, {
+      row,
+      error
+    });
+    throw new Error(`Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`);
+  }
+}
+
+function validateRequiredFields<T>(obj: T, rowIndex: number): void {
+  console.debug(`[FileParser] Validating fields for row ${rowIndex + 1}:`, obj);
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined || value === null || value === '') {
+      console.error(`[FileParser] Missing required field in row ${rowIndex + 1}:`, {
+        field: key,
+        value
+      });
+      throw new Error(`Row ${rowIndex + 1}: Missing required field ${key}`);
+    }
+  }
+}
+
+function formatDateTime(value: any): string {
+  console.debug('[FileParser] Formatting date/time value:', value);
+
+  if (!value) {
+    console.error('[FileParser] Missing date/time value');
+    throw new Error('Date/time value is missing');
+  }
+
+  try {
+    // Handle different date formats
+    let parsedDate: Date;
+
+    // If value is already a Date object
+    if (value instanceof Date) {
+      parsedDate = value;
+    }
+    // If value is a number (timestamp)
+    else if (typeof value === 'number') {
+      parsedDate = new Date(value);
+    }
+    // If value is a string
+    else {
+      const dateStr = String(value).trim();
+      
+      // Try ISO format first
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        parsedDate = new Date(dateStr);
+      }
+      // Try dd-MM-yyyy HH:mm format
+      else {
+        parsedDate = parseDate(dateStr, 'dd-MM-yyyy HH:mm', new Date());
+      }
+    }
+
+    // Validate the parsed date
+    if (!isValid(parsedDate)) {
+      console.error('[FileParser] Invalid date:', {
+        input: value,
+        parsed: parsedDate
+      });
+      throw new Error('Invalid date');
+    }
+
+    const formatted = format(parsedDate, 'yyyy-MM-dd HH:mm:ss');
+    console.debug('[FileParser] Date formatted successfully:', {
+      input: value,
+      parsed: parsedDate,
+      formatted
+    });
+
+    return formatted;
+  } catch (error) {
+    console.error('[FileParser] Error formatting date/time:', {
+      value,
+      error
+    });
+    throw new Error('Invalid date/time format');
+  }
+}
 
 // Format date for display
 export const formatDisplayDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return format(date, 'dd MMMM yyyy');
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (!isValid(date)) return '';
+    return format(date, 'dd MMMM yyyy');
+  } catch (error) {
+    console.error('[FileParser] Error formatting display date:', {
+      dateString,
+      error
+    });
+    return '';
+  }
 };
 
 // Format time for display
 export const formatDisplayTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  return format(date, 'HH:mm');
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (!isValid(date)) return '';
+    return format(date, 'HH:mm');
+  } catch (error) {
+    console.error('[FileParser] Error formatting display time:', {
+      dateString,
+      error
+    });
+    return '';
+  }
 };
 
 // Convert assignment response to table rows
-export const convertResponseToTableRows = (response: any): JobTableRow[] => {
+export const convertResponseToTableRows = (response: RosterResponse): JobTableRow[] => {
+  console.log('[FileParser] Converting response to table rows:', response);
+  
   const rows: JobTableRow[] = [];
   
   // Process assigned jobs
   Object.entries(response.jobs).forEach(([salesman_id, jobs]) => {
-    (jobs as any[]).forEach(job => {
+    jobs.forEach(job => {
       rows.push({
         job_id: job.job_id,
         date: job.date,
@@ -263,18 +492,31 @@ export const convertResponseToTableRows = (response: any): JobTableRow[] => {
       start_time: null,
     });
   });
+
+  console.log('[FileParser] Conversion complete:', {
+    totalRows: rows.length,
+    assignedJobs: rows.filter(r => r.assignment_status === 'Assigned').length,
+    unassignedJobs: rows.filter(r => r.assignment_status === 'Unassigned').length
+  });
   
   return rows;
 };
 
 // Convert table data to CSV
-export const exportTableToCSV = (rows: JobTableRow[]): string => {
-  const csvContent = Papa.unparse(rows);
-  return csvContent;
+export const exportTableToCSV = (rows: any[]): string => {
+  console.log('[FileParser] Exporting table data to CSV:', {
+    rowCount: rows.length
+  });
+  return Papa.unparse(rows);
 };
 
 // Download data as CSV file
 export const downloadCSV = (data: string, filename: string): void => {
+  console.log('[FileParser] Downloading CSV file:', {
+    filename,
+    dataSize: data.length
+  });
+
   const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

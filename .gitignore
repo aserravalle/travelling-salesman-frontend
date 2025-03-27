@@ -23,3 +23,9 @@ dist-ssr
 *.sw?
 .env
 .vite
+
+# Test files
+test/cleaners_20250328.csv
+test/jobs_20250328.csv
+test/REPASAT - Admin - Empleados.xlsx
+test/REPASAT - Panel - Planificación.xlsx

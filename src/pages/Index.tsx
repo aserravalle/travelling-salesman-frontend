@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { parseCSV, parseExcel, processJobData, processSalesmanData, convertResponseToTableRows, exportTableToCSV, downloadCSV, formatDisplayDate, formatDisplayTime } from '@/lib/fileParser';
+import { readFile, parseFile, convertResponseToTableRows, exportTableToCSV, downloadCSV, formatDisplayDate, formatDisplayTime } from '@/lib/fileParser';
 import { assignJobs } from '@/services/api';
-import { fadeIn, staggerContainer } from '@/lib/motion';
+import { fadeIn } from '@/lib/motion';
 import { Job, Salesman, RosterRequest, JobTableRow } from '@/types';
-import { ArrowRight, Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
+import { Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import Map from '@/components/Map';
 import StatusBanner from '@/components/StatusBanner';
 import {
@@ -48,81 +48,63 @@ const Index = () => {
 
     try {
       for (const file of files) {
-        let rawData;
-        if (file.name.endsWith('.csv')) {
-          rawData = await parseCSV(file);
-        } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-          rawData = await parseExcel(file);
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Invalid file format",
-            description: `File ${file.name} is not a CSV or Excel file`,
-          });
-          continue;
-        }
-
-        if (!rawData || rawData.length === 0) {
-          toast({
-            variant: "destructive",
-            title: "Empty file",
-            description: `File ${file.name} contains no data`,
-          });
-          continue;
-        }
-
-        const firstRow = rawData[0];
-        const hasJobFields = 'job_id' in firstRow && 'duration_mins' in firstRow;
-        const hasSalesmanFields = 'salesman_id' in firstRow && 'home_location' in firstRow || 
-                                ('salesman_id' in firstRow && ('home_latitude' in firstRow || 'home_longitude' in firstRow));
+        // Read the file
+        const readResult = await readFile(file);
         
-        if (hasJobFields) {
-          const processedJobs = processJobData(rawData);
-          setParsedJobs(processedJobs);
-          toast({
-            title: "Jobs file processed",
-            description: `Successfully parsed ${processedJobs.length} jobs from ${file.name}`,
-          });
-        } else if (hasSalesmanFields) {
-          const processedSalesmen = processSalesmanData(rawData);
-          setParsedSalesmen(processedSalesmen);
-          toast({
-            title: "Salesmen file processed",
-            description: `Successfully parsed ${processedSalesmen.length} salesmen from ${file.name}`,
-          });
-        } else {
-          const columnSet = new Set(Object.keys(firstRow).map(key => key.toLowerCase()));
-          
-          const jobKeywords = ['job', 'task', 'assignment', 'duration', 'entry', 'exit'];
-          const salesmanKeywords = ['salesman', 'sales', 'employee', 'staff', 'person', 'home'];
-          
-          const jobScore = jobKeywords.filter(keyword => 
-            [...columnSet].some(column => column.includes(keyword))
-          ).length;
-          
-          const salesmanScore = salesmanKeywords.filter(keyword => 
-            [...columnSet].some(column => column.includes(keyword))
-          ).length;
-          
-          if (jobScore > salesmanScore) {
-            const processedJobs = processJobData(rawData);
-            setParsedJobs(processedJobs);
-            toast({
-              title: "Jobs file detected",
-              description: `Identified and parsed ${processedJobs.length} jobs from ${file.name}`,
-            });
-          } else if (salesmanScore > jobScore) {
-            const processedSalesmen = processSalesmanData(rawData);
-            setParsedSalesmen(processedSalesmen);
-            toast({
-              title: "Salesmen file detected",
-              description: `Identified and parsed ${processedSalesmen.length} salesmen from ${file.name}`,
-            });
-          } else {
+        if (readResult.errors.length > 0) {
+          readResult.errors.forEach(error => {
             toast({
               variant: "destructive",
-              title: "Unknown file format",
-              description: `Could not determine if ${file.name} contains jobs or salesmen data`,
+              title: `Error reading ${file.name}`,
+              description: error.message,
+            });
+          });
+          
+          if (readResult.data.length === 0) continue;
+        }
+
+        // Parse the data
+        const parseResult = parseFile(readResult.data);
+        
+        if (parseResult.errors.length > 0) {
+          parseResult.errors.forEach(error => {
+            toast({
+              variant: "destructive",
+              title: `Error parsing ${file.name}`,
+              description: error.message,
+            });
+          });
+        }
+
+        if (parseResult.type === 'unknown') {
+          toast({
+            variant: "destructive",
+            title: "Unknown data format",
+            description: `Could not determine if ${file.name} contains jobs or salesmen data`,
+          });
+          continue;
+        }
+
+        if (parseResult.skippedRows > 0) {
+          toast({
+            variant: "warning",
+            title: "Skipped rows",
+            description: `${parseResult.skippedRows} row${parseResult.skippedRows > 1 ? 's were' : ' was'} skipped in ${file.name}`,
+          });
+        }
+
+        if (parseResult.data.length > 0) {
+          if (parseResult.type === 'job') {
+            setParsedJobs(parseResult.data as Job[]);
+            toast({
+              title: "Jobs file processed",
+              description: `Successfully parsed ${parseResult.data.length} jobs from ${file.name}`,
+            });
+          } else if (parseResult.type === 'salesman') {
+            setParsedSalesmen(parseResult.data as Salesman[]);
+            toast({
+              title: "Salesmen file processed",
+              description: `Successfully parsed ${parseResult.data.length} salesmen from ${file.name}`,
             });
           }
         }
@@ -132,7 +114,7 @@ const Index = () => {
       toast({
         variant: "destructive",
         title: "Error processing files",
-        description: "An error occurred while processing your files",
+        description: "An unexpected error occurred while processing your files",
       });
     } finally {
       setIsProcessingFiles(false);

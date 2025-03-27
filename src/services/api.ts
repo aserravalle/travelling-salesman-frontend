@@ -2,9 +2,7 @@
 import { RosterRequest, RosterResponse } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 
-const VITE_API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT_PRODUCTION 
-                        || import.meta.env.VITE_API_ENDPOINT_DEBUG 
-                        || "http://localhost:8000";
+const VITE_API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || "http://localhost:8000";
 
 export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> => {
   try {
