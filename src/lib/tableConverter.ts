@@ -15,14 +15,15 @@ export const convertResponseToTableRows = (response: RosterResponse): JobTableRo
       rows.push({
         job_id: job.job_id,
         date: job.date,
-        latitude: job.location[0],
-        longitude: job.location[1],
+        location: job.location,
         duration_mins: job.duration_mins,
         entry_time: job.entry_time,
         exit_time: job.exit_time,
         assignment_status: 'Assigned',
         salesman_id: salesman_id,
         start_time: job.start_time,
+        client_name: job.client_name,
+        salesman_name: job.salesman_name
       });
     });
   });
@@ -32,14 +33,14 @@ export const convertResponseToTableRows = (response: RosterResponse): JobTableRo
     rows.push({
       job_id: job.job_id,
       date: job.date,
-      latitude: job.location[0],
-      longitude: job.location[1],
+      location: job.location,
       duration_mins: job.duration_mins,
       entry_time: job.entry_time,
       exit_time: job.exit_time,
       assignment_status: 'Unassigned',
       salesman_id: null,
       start_time: null,
+      client_name: job.client_name
     });
   });
 
@@ -79,4 +80,4 @@ export const downloadCSV = (data: string, filename: string): void => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-}; 
+};

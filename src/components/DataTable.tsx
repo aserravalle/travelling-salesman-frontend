@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Table, 
   TableBody, 
@@ -56,23 +56,17 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
   const columns: Column[] = [
     // Required columns
     { key: 'job_id', label: 'Job ID' },
+    { key: 'client_name', label: 'Client' },
     { key: 'date', label: 'Date' },
-    { key: 'location', label: 'Location' },
+    { key: 'coordinates', label: 'Coordinates' },
+    { key: 'address', label: 'Address' },
     { key: 'duration_mins', label: 'Duration (mins)' },
     { key: 'entry_time', label: 'Entry Time' },
     { key: 'exit_time', label: 'Exit Time' },
     { key: 'assignment_status', label: 'Status' },
     { key: 'salesman_id', label: 'Salesman ID' },
+    { key: 'salesman_name', label: 'Salesman' },
     { key: 'start_time', label: 'Start Time' },
-    
-    // Check if ANY row has these optional properties before adding the column
-    ...(data.some(row => 'name' in row) ? [{ key: 'name', label: 'Name' }] : []),
-    ...(data.some(row => 'customer' in row) ? [{ key: 'customer', label: 'Customer' }] : []),
-    ...(data.some(row => 'address' in row) ? [{ key: 'address', label: 'Address' }] : []),
-    ...(data.some(row => 'suburb' in row) ? [{ key: 'suburb', label: 'Suburb' }] : []),
-    ...(data.some(row => 'postcode' in row) ? [{ key: 'postcode', label: 'Postcode' }] : []),
-    ...(data.some(row => 'city' in row) ? [{ key: 'city', label: 'City' }] : []),
-    ...(data.some(row => 'country' in row) ? [{ key: 'country', label: 'Country' }] : []),
   ];
 
   // Get unique salesman IDs for filtering
@@ -135,7 +129,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
   }, [data, searchTerm, sortBy, sortDirection, filterStatus, filterSalesman]);
 
   // Notify parent about filtered data changes
-  useMemo(() => {
+  useEffect(() => {
     if (onFilteredDataChange) {
       onFilteredDataChange(sortedAndFilteredData);
     }
@@ -167,6 +161,15 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
     return sortDirection === 'asc' ? 
       <ChevronUp className="w-4 h-4 ml-1" /> : 
       <ChevronDown className="w-4 h-4 ml-1" />;
+  };
+
+  // Format location display
+  const formatLocation = (location: Location): string => {
+    if ('latitude' in location && 'longitude' in location) {
+      const coords = `[${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}]`;
+      return location.address ? `${location.address} ${coords}` : coords;
+    }
+    return location.address || '-';
   };
 
   return (
@@ -259,21 +262,21 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
                   )
                 }>
                   {columns.map((column) => {
-                    let cellContent = row[column.key as keyof typeof row] ?? null;
+                    let cellContent = null;
                     
                     // Format dates and times
                     if (column.key === 'date') {
                       cellContent = formatDisplayDate(row.date);
-                    } else if (['entry_time', 'exit_time', 'start_time'].includes(column.key) && cellContent) {
-                      cellContent = formatDisplayTime(String(cellContent));
-                    } else if (column.key === 'location' && cellContent) {
-                      const location = cellContent as unknown as Location;
-                      cellContent = 'latitude' in location && 'longitude' in location
-                        ? `[${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}]`
-                        : location.address || '-';
-                      if ('latitude' in location && 'longitude' in location && location.address) {
-                        cellContent += ` (${location.address})`;
-                      }
+                    } else if (['entry_time', 'exit_time', 'start_time'].includes(column.key)) {
+                      cellContent = row[column.key] ? formatDisplayTime(String(row[column.key])) : null;
+                    } else if (column.key === 'coordinates') {
+                      cellContent = row.location.latitude && row.location.longitude
+                        ? `[${row.location.latitude.toFixed(4)}, ${row.location.longitude.toFixed(4)}]`
+                        : null;
+                    } else if (column.key === 'address') {
+                      cellContent = row.location.address || null;
+                    } else {
+                      cellContent = row[column.key as keyof typeof row] ?? null;
                     }
                     
                     return (

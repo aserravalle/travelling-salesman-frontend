@@ -66,13 +66,17 @@ describe('tableConverter', () => {
       expect(result[0]).toEqual({
         job_id: '1',
         date: '2025-02-05',
-        latitude: undefined,
-        longitude: undefined,
+        location: {
+          "latitude": 40.7128,
+          "longitude": -74.006,
+        },
         duration_mins: 60,
         entry_time: '2025-02-05 09:00:00',
         exit_time: '2025-02-05 10:00:00',
         assignment_status: 'Assigned',
+        client_name: "Test Client",
         salesman_id: '101',
+        "salesman_name": undefined,
         start_time: '2025-02-05 09:00:00'
       });
     });
@@ -83,14 +87,11 @@ describe('tableConverter', () => {
         jobs: {},
         unassigned_jobs: [{
           job_id: '2',
-          client_name: 'Test Client',
           date: '2025-02-05',
           location: { latitude: 40.7128, longitude: -74.006 } as Location,
           duration_mins: 60,
           entry_time: '2025-02-05 09:00:00',
           exit_time: '2025-02-05 10:00:00',
-          start_time: null,
-          salesman_id: null
         }]
       };
 
@@ -100,8 +101,10 @@ describe('tableConverter', () => {
       expect(result[0]).toEqual({
         job_id: '2',
         date: '2025-02-05',
-        latitude: 40.7128,
-        longitude: -74.006,
+        location: {
+          "latitude": 40.7128,
+          "longitude": -74.006,
+        },
         duration_mins: 60,
         entry_time: '2025-02-05 09:00:00',
         exit_time: '2025-02-05 10:00:00',

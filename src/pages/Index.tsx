@@ -152,10 +152,9 @@ const Index = () => {
       
       setResponseMessage(response.message);
       
-      // TODO: Update the response messages to correspond with the status
-      if (response.message.includes('Error') || response.message.includes('error')) {
+      if (response.message.toLowerCase().includes('error')) {
         setResponseStatus('error');
-      } else if (response.message.includes('unassigned')) {
+      } else if (response.message.toLowerCase().includes('unassigned')) {
         setResponseStatus('warning');
       } else {
         setResponseStatus('success');
@@ -299,7 +298,8 @@ const Index = () => {
                             <TableRow>
                               <TableHead>Job ID</TableHead>
                               <TableHead>Date</TableHead>
-                              <TableHead>Location</TableHead>
+                              <TableHead>Coordinates</TableHead>
+                              <TableHead>Address</TableHead>
                               <TableHead>Duration</TableHead>
                               <TableHead>Entry Time</TableHead>
                               <TableHead>Exit Time</TableHead>
@@ -313,12 +313,10 @@ const Index = () => {
                                 <TableCell>
                                   {job.location.latitude && job.location.longitude 
                                     ? `[${job.location.latitude.toFixed(4)}, ${job.location.longitude.toFixed(4)}]`
-                                    : job.location.address || '-'
+                                    : '-'
                                   }
-                                  {job.location.latitude && job.location.longitude && job.location.address && (
-                                    <span className="text-muted-foreground ml-2">({job.location.address})</span>
-                                  )}
                                 </TableCell>
+                                <TableCell>{job.location.address || '-'}</TableCell>
                                 <TableCell>{job.duration_mins} mins</TableCell>
                                 <TableCell>{formatDisplayTime(job.entry_time)}</TableCell>
                                 <TableCell>{formatDisplayTime(job.exit_time)}</TableCell>
@@ -360,7 +358,8 @@ const Index = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Salesman ID</TableHead>
-                              <TableHead>Home Location</TableHead>
+                              <TableHead>Coordinates</TableHead>
+                              <TableHead>Address</TableHead>
                               <TableHead>Start Time</TableHead>
                               <TableHead>End Time</TableHead>
                             </TableRow>
@@ -372,12 +371,10 @@ const Index = () => {
                                 <TableCell>
                                   {salesman.location.latitude && salesman.location.longitude 
                                     ? `[${salesman.location.latitude.toFixed(4)}, ${salesman.location.longitude.toFixed(4)}]`
-                                    : salesman.location.address || '-'
+                                    : '-'
                                   }
-                                  {salesman.location.latitude && salesman.location.longitude && salesman.location.address && (
-                                    <span className="text-muted-foreground ml-2">({salesman.location.address})</span>
-                                  )}
                                 </TableCell>
+                                <TableCell>{salesman.location.address || '-'}</TableCell>
                                 <TableCell>{formatDisplayTime(salesman.start_time)}</TableCell>
                                 <TableCell>{formatDisplayTime(salesman.end_time)}</TableCell>
                               </TableRow>
