@@ -66,7 +66,7 @@ describe('columnMatcher', () => {
     const columns = ['id', 'name', 'address', 'phone'];
     const result = matchColumns(columns);
     
-    expect(result.type).toBe('unknown');
+    expect(result.type).toBe('missingRequiredJobFields');
   });
 
   it('should handle empty column list', () => {

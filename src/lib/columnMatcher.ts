@@ -40,6 +40,9 @@ function determineDatasetType(columns: string[]): DatasetType {
     ...SALESMAN_COLUMN_MAPPINGS 
   });
 
+  // empty column list
+  if (columns.length === 0) { return 'unknown' }
+
   // If missing location, it's unknown
   const hasAddress = !!matches.address;
   const hasLatLong = !!(matches.latitude && matches.longitude);

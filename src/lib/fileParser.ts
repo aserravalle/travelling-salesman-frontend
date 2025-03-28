@@ -25,16 +25,16 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
 
   if (!rawData.length) { return noDataToParse() };
 
-  const matchResult = matchColumnsInData(rawData[0]);
-
-  const errors: ParseError[] = [];
-  const parsedData: (Job | Salesman)[] = [];
-  let skippedRows = 0;
+  let matchResult = matchColumnsInData(rawData[0]);
 
   if (matchResult.type === 'unknown') { return unknownDataSetType() }
   if (matchResult.type === 'missingLocation') { return missingLocationType() }
   if (matchResult.type === 'missingRequiredJobFields') { return missingRequiredJobFieldsType() }
   if (matchResult.type === 'missingRequiredSalesmanFields') { return missingRequiredSalesmanFieldsType() }
+
+  const errors: ParseError[] = [];
+  const parsedData: (Job | Salesman)[] = [];
+  let skippedRows = 0;
 
   const parseRow = matchResult.type === 'job' ? parseJobRow : parseSalesmanRow;
 
@@ -43,6 +43,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
       const row = rawData[i];
       console.debug(`[FileParser] Processing row ${i + 1}:`, row);
       
+      matchResult = matchColumnsInData(row);
       const parsedRow = parseRow(row, matchResult, i);
       parsedData.push(parsedRow);
       console.debug(`[FileParser] Successfully parsed ${matchResult.type}:`, parsedRow);
