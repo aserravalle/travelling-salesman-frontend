@@ -150,6 +150,7 @@ describe('fileReader', () => {
     });
   
     it('should read salesmen.csv correctly', async () => {
+      // Read the test file content
       const filePath = path.join(process.cwd(), 'test', '01_salesmen.csv');
       const result = await readFileForTest(filePath);
       

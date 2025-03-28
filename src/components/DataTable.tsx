@@ -15,7 +15,6 @@ import {
   Download, 
   Filter, 
   Search, 
-  SlidersHorizontal
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -30,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { exportTableToCSV, downloadCSV } from '@/lib/fileParser';
+import { exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
 import { JobTableRow } from '@/types/types';
 import { cn } from '@/lib/utils';

@@ -1,7 +1,6 @@
 export type Location = 
-  | { address: string; latitude: number; longitude: number; }
-  | { latitude: number; longitude: number; } // lat & long given, no address
-  | { address: string; } // address given, no lat/long
+  | { latitude: number; longitude: number; address?: string } // both lat & long required, address optional
+  | { address: string; latitude?: never; longitude?: never } // only address, no lat/long
 
 
 export interface Job {

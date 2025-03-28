@@ -4,7 +4,7 @@ import {
   LOCATION_COLUMN_MAPPINGS 
 } from './columnMappings';
 
-export type DatasetType = 'job' | 'salesman' | 'unknown';
+export type DatasetType = 'job' | 'salesman' | 'unknown' | 'missingLocation' | 'missingRequiredJobFields' | 'missingRequiredSalesmanFields';
 export type ColumnMatch = { [key: string]: string };
 
 export interface MatchResult {
@@ -34,13 +34,7 @@ function findBestColumnMatch(columns: string[], mappings: { [key: string]: strin
   return matches;
 }
 
-// % of columns that are matched
-function calculateMatchScore(columnMatches: ColumnMatch, requiredFields: string[]): number {
-  const matchedRequiredFields = requiredFields.filter(field => field in columnMatches);
-  return matchedRequiredFields.length / requiredFields.length;
-}
-
-export function determineDatasetType(columns: string[]): DatasetType {
+function determineDatasetType(columns: string[]): DatasetType {
   const matches = findBestColumnMatch(columns, { 
     ...JOB_COLUMN_MAPPINGS,
     ...SALESMAN_COLUMN_MAPPINGS 
@@ -50,18 +44,24 @@ export function determineDatasetType(columns: string[]): DatasetType {
   const hasAddress = !!matches.address;
   const hasLatLong = !!(matches.latitude && matches.longitude);
   const hasLocation = hasAddress || hasLatLong;
-  if (!hasLocation) { return 'unknown' }
+  if (!hasLocation) { return 'missingLocation' }
 
   // If missing both types of required fields, it's unknown
   const hasSalesmanRequiredFields = !!(matches.start_time && matches.end_time);
   const hasJobRequiredFields = !!(matches.entry_time && matches.exit_time && matches.duration_mins);
-  if (!hasSalesmanRequiredFields && !hasJobRequiredFields) { return 'unknown' }
 
   // If only one ID type matches, that's the dataset type
   const hasJobId = !!matches.job_id;
   const hasSalesmanId = !!matches.salesman_id;
-  if (hasJobId && hasJobRequiredFields) return 'job';
-  if (hasSalesmanId && hasSalesmanRequiredFields) return 'salesman';
+  if (hasJobId) {
+    if (hasJobRequiredFields) return 'job';
+    else return 'missingRequiredJobFields';
+  }
+  if (hasSalesmanId)
+  {
+    if (hasSalesmanRequiredFields) return 'salesman';
+    else return 'missingRequiredSalesmanFields';
+  }
 
   // else unknown
   return 'unknown';

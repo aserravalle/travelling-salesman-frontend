@@ -32,6 +32,9 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
   let skippedRows = 0;
 
   if (matchResult.type === 'unknown') { return unknownDataSetType() }
+  if (matchResult.type === 'missingLocation') { return missingLocationType() }
+  if (matchResult.type === 'missingRequiredJobFields') { return missingRequiredJobFieldsType() }
+  if (matchResult.type === 'missingRequiredSalesmanFields') { return missingRequiredSalesmanFieldsType() }
 
   const parseRow = matchResult.type === 'job' ? parseJobRow : parseSalesmanRow;
 
@@ -99,6 +102,78 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
       errors: [{
         message: `Unable to identify dataset type.`,
         details: matchResult
+      }]
+    };
+  }
+
+  function missingLocationType(): ParseResult<Job | Salesman> {
+    console.error('[FileParser] Missing location in dataset:', {
+      requiredColumns: Object.keys(matchResult.columnMatches)
+    });
+    return {
+      data: [],
+      type: 'missingLocation',
+      skippedRows: 0,
+      errors: [{
+        message: `Missing location in dataset.`,
+        details: matchResult
+      }]
+    };
+  }
+
+  function missingRequiredSalesmanFieldsType(): ParseResult<Salesman> {
+    const hasSalesmanRequiredFields = !!(matchResult.columnMatches.start_time && matchResult.columnMatches.end_time);
+    
+    const missingFields = [];
+    if (!hasSalesmanRequiredFields) {
+      if (!matchResult.columnMatches.start_time) missingFields.push('start_time');
+      if (!matchResult.columnMatches.end_time) missingFields.push('end_time');
+    }
+
+    console.error('[FileParser] Missing required fields in Salesman dataset:', {
+      missingFields,
+      columnMatches: matchResult.columnMatches
+    });
+
+    return {
+      data: [],
+      type: 'missingRequiredSalesmanFields',
+      skippedRows: 0,
+      errors: [{
+        message: `Missing required Salesman fields: ${missingFields.join(', ')}`,
+        details: {
+          missingFields,
+          columnMatches: matchResult.columnMatches
+        }
+      }]
+    };
+  }
+
+  function missingRequiredJobFieldsType(): ParseResult<Job | Salesman> {
+    const hasJobRequiredFields = !!(matchResult.columnMatches.entry_time && matchResult.columnMatches.exit_time && matchResult.columnMatches.duration_mins);
+    
+    const missingFields = [];
+    if (!hasJobRequiredFields) {
+      if (!matchResult.columnMatches.entry_time) missingFields.push('entry_time');
+      if (!matchResult.columnMatches.exit_time) missingFields.push('exit_time');
+      if (!matchResult.columnMatches.duration_mins) missingFields.push('duration_mins');
+    }
+
+    console.error('[FileParser] Missing required Job fields:', {
+      missingFields,
+      columnMatches: matchResult.columnMatches
+    });
+
+    return {
+      data: [],
+      type: 'missingRequiredJobFields',
+      skippedRows: 0,
+      errors: [{
+        message: `Missing required Job fields: ${missingFields.join(', ')}`,
+        details: {
+          missingFields,
+          columnMatches: matchResult.columnMatches
+        }
       }]
     };
   }
@@ -188,26 +263,42 @@ function parseSalesmanRow(row: any, matchResult: MatchResult, rowIndex: number):
   }
 }
 
-function parseLocation(columnMatches: ColumnMatch, row: any, rowIndex: number) {
-  let location: Location;
-  if (columnMatches.address && row[columnMatches.address]) {
-  location = { address: row[columnMatches.address] };
-  } else {
+function parseLocation(columnMatches: ColumnMatch, row: any, rowIndex: number): Location {
+  // Helper function to check if a column exists and has a value
+  const hasValue = (colName: string) => colName && row[colName];
+
+  // Parse coordinates if both are available
+  if (hasValue(columnMatches.latitude) && hasValue(columnMatches.longitude)) {
     const latitude = parseFloat(row[columnMatches.latitude]);
     const longitude = parseFloat(row[columnMatches.longitude]);
 
-    if (isNaN(latitude) || isNaN(longitude)) {
+    if (!isNaN(latitude) && !isNaN(longitude)) {
+      // If we have valid coordinates, return location with coordinates
+      const location: Location = { latitude, longitude };
+      
+      // Optionally add address if available
+      if (hasValue(columnMatches.address)) {
+        location.address = row[columnMatches.address];
+      }
+      
+      return location;
+    } else if (!hasValue(columnMatches.address)) {
       console.error(`[FileParser] Invalid coordinates in row ${rowIndex + 1}:`, {
         latitude,
         longitude,
         rawLat: row[columnMatches.latitude],
         rawLng: row[columnMatches.longitude]
       });
-      throw new Error('Invalid location coordinates');
     }
-    location = { latitude, longitude };
   }
-  return location;
+
+  // If we have an address but no valid coordinates, return address-only location
+  if (hasValue(columnMatches.address)) {
+    return { address: row[columnMatches.address] };
+  }
+
+  // If we get here, we have no valid location data
+  throw new Error(`No valid location data found in row ${rowIndex + 1}`);
 }
 
 function validateRequiredFields<T>(obj: T, rowIndex: number): void {
