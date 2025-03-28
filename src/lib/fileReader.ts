@@ -40,7 +40,7 @@ export const readFile = async (file: File): Promise<ReadResult> => {
       throw error;
     }
 
-    const validRows = postProcessingData(result.rawData, result.errors, file.name);
+    const validRows = dataPostProcessing(result.rawData, result.errors, file.name);
 
     return {
       data: validRows,
@@ -64,7 +64,8 @@ export const readFile = async (file: File): Promise<ReadResult> => {
     };
   }
 };
-function postProcessingData(rawData: any[], errors: ReadError[], fileName: String) {
+
+function dataPostProcessing(rawData: any[], errors: ReadError[], fileName: String) {
   // Filter out empty rows
   const validRows = rawData.filter(row => {
     const hasValues = Object.values(row).some(value => value !== null && value !== undefined && value !== ''
