@@ -1,13 +1,10 @@
-
-export interface Location {
-  latitude: number;
-  longitude: number;
-}
-
 export interface Job {
   job_id: string;
+  client_name: string;
   date: string;
-  location: [number, number];
+  latitude: number;
+  longitude: number;
+  address: string;
   duration_mins: number;
   entry_time: string;
   exit_time: string;
@@ -15,7 +12,10 @@ export interface Job {
 
 export interface Salesman {
   salesman_id: string;
-  home_location: [number, number];
+  salesman_name: string;
+  latitude: number;
+  longitude: number;
+  address: string;
   start_time: string;
   end_time: string;
 }

@@ -1,8 +1,9 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import { Job, Salesman, RosterResponse, JobTableRow } from '@/types';
-import { format, parse as parseDate, isValid } from 'date-fns';
+import { Job, Salesman, JobTableRow } from '@/types/types';
+import { RosterResponse } from "@/types/roster";
 import { matchColumns, type DatasetType, type MatchResult } from './columnMatcher';
+import { formatDateTime } from './formatDateTime';
 
 export interface ParseError {
   row?: number;
@@ -25,79 +26,97 @@ export interface ReadResult {
   debug?: any; // For additional debug information
 }
 
+interface ReadFileResult {
+  rawData: any[];
+  errors: ParseError[];
+  debug: any;
+}
+
+async function tryReadCsv(file: File): Promise<ReadFileResult> {
+  console.log('[FileParser] Processing CSV file');
+  const result = await new Promise<Papa.ParseResult<any>>((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        console.log('[FileParser] CSV parsing complete:', {
+          rowCount: results.data.length,
+          fields: results.meta.fields,
+          errors: results.errors
+        });
+        resolve(results);
+      },
+      error: (error) => {
+        console.error('[FileParser] CSV parsing error:', error);
+        reject(error);
+      }
+    });
+  });
+
+  const errors = result.errors.map(err => ({
+    row: err.row,
+    message: err.message,
+    details: err
+  }));
+
+  return {
+    rawData: result.data,
+    errors,
+    debug: { csvMeta: result.meta }
+  };
+}
+
+async function tryReadExcel(file: File): Promise<ReadFileResult> {
+  console.log('[FileParser] Processing Excel file');
+  const data = await new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
+    reader.onerror = (e) => {
+      console.error('[FileParser] Excel file read error:', e);
+      reject(e);
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  const workbook = XLSX.read(data, { type: 'array' });
+  console.log('[FileParser] Excel workbook loaded:', {
+    sheets: workbook.SheetNames,
+    props: workbook.Props
+  });
+
+  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  const debug = {
+    sheetName: workbook.SheetNames[0],
+    range: worksheet['!ref'],
+    dimensions: worksheet['!dimensions']
+  };
+
+  const rawData = XLSX.utils.sheet_to_json(worksheet);
+  console.log('[FileParser] Excel data converted to JSON:', {
+    rowCount: rawData.length,
+    sampleRow: rawData[0]
+  });
+
+  return {
+    rawData,
+    errors: [],
+    debug
+  };
+}
+
 // Read file and return raw data
 export const readFile = async (file: File): Promise<ReadResult> => {
   console.log(`[FileParser] Reading file: ${file.name} (${file.type}, ${file.size} bytes)`);
   
   try {
-    let rawData: any[] = [];
-    let errors: ParseError[] = [];
-    let debug: any = {};
+    let result: ReadFileResult;
 
     if (file.name.endsWith('.csv')) {
-      console.log('[FileParser] Processing CSV file');
-      const result = await new Promise<Papa.ParseResult<any>>((resolve, reject) => {
-        Papa.parse(file, {
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            console.log('[FileParser] CSV parsing complete:', {
-              rowCount: results.data.length,
-              fields: results.meta.fields,
-              errors: results.errors
-            });
-            resolve(results);
-          },
-          error: (error) => {
-            console.error('[FileParser] CSV parsing error:', error);
-            reject(error);
-          }
-        });
-      });
-
-      rawData = result.data;
-      debug.csvMeta = result.meta;
-      
-      if (result.errors.length > 0) {
-        console.warn('[FileParser] CSV parse errors:', result.errors);
-        errors = result.errors.map(err => ({
-          row: err.row,
-          message: err.message,
-          details: err
-        }));
-      }
+      result = await tryReadCsv(file);
     } 
     else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-      console.log('[FileParser] Processing Excel file');
-      const data = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
-        reader.onerror = (e) => {
-          console.error('[FileParser] Excel file read error:', e);
-          reject(e);
-        };
-        reader.readAsArrayBuffer(file);
-      });
-
-      const workbook = XLSX.read(data, { type: 'array' });
-      console.log('[FileParser] Excel workbook loaded:', {
-        sheets: workbook.SheetNames,
-        props: workbook.Props
-      });
-
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      debug.excelMeta = {
-        sheetName: workbook.SheetNames[0],
-        range: worksheet['!ref'],
-        dimensions: worksheet['!dimensions']
-      };
-
-      rawData = XLSX.utils.sheet_to_json(worksheet);
-      console.log('[FileParser] Excel data converted to JSON:', {
-        rowCount: rawData.length,
-        sampleRow: rawData[0]
-      });
+      result = await tryReadExcel(file);
     } 
     else {
       const error = new Error('Unsupported file format');
@@ -106,7 +125,7 @@ export const readFile = async (file: File): Promise<ReadResult> => {
     }
 
     // Filter out empty rows
-    const validRows = rawData.filter(row => {
+    const validRows = result.rawData.filter(row => {
       const hasValues = Object.values(row).some(value => 
         value !== null && value !== undefined && value !== ''
       );
@@ -116,10 +135,10 @@ export const readFile = async (file: File): Promise<ReadResult> => {
       return hasValues;
     });
 
-    const skippedRows = rawData.length - validRows.length;
+    const skippedRows = result.rawData.length - validRows.length;
     if (skippedRows > 0) {
       console.warn(`[FileParser] Skipped ${skippedRows} empty rows`);
-      errors.push({
+      result.errors.push({
         message: `${skippedRows} empty row${skippedRows > 1 ? 's were' : ' was'} skipped`,
         details: { skippedRows }
       });
@@ -127,17 +146,17 @@ export const readFile = async (file: File): Promise<ReadResult> => {
 
     console.log('[FileParser] File processing complete:', {
       fileName: file.name,
-      totalRows: rawData.length,
+      totalRows: result.rawData.length,
       validRows: validRows.length,
       skippedRows,
-      errorCount: errors.length
+      errorCount: result.errors.length
     });
 
     return {
       data: validRows,
       fileName: file.name,
-      errors,
-      debug
+      errors: result.errors,
+      debug: result.debug
     };
   } catch (error) {
     console.error('[FileParser] File processing error:', {
@@ -181,7 +200,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
   const matchResult = matchColumns(columns);
   console.log('[FileParser] Column matching result:', {
     type: matchResult.type,
-    score: matchResult.score,
+    score: matchResult.job_score,
     matches: matchResult.columnMatches
   });
 
@@ -189,9 +208,9 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
   const parsedData: (Job | Salesman)[] = [];
   let skippedRows = 0;
 
-  if (matchResult.type === 'unknown' || matchResult.score < 0.5) {
+  if (matchResult.type === 'unknown' || matchResult.job_score < 0.5) {
     console.error('[FileParser] Unable to identify dataset type:', {
-      score: matchResult.score,
+      score: matchResult.job_score,
       requiredColumns: matchResult.type === 'job' ? 
         Object.keys(matchResult.columnMatches) : 
         Object.keys(matchResult.columnMatches)
@@ -202,7 +221,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
       type: 'unknown',
       skippedRows: 0,
       errors: [{
-        message: `Unable to identify dataset type. Match score: ${matchResult.score}`,
+        message: `Unable to identify dataset type. Match score: ${matchResult.job_score}`,
         details: matchResult
       }]
     };
@@ -360,98 +379,6 @@ function validateRequiredFields<T>(obj: T, rowIndex: number): void {
     }
   }
 }
-
-function formatDateTime(value: any): string {
-  console.debug('[FileParser] Formatting date/time value:', value);
-
-  if (!value) {
-    console.error('[FileParser] Missing date/time value');
-    throw new Error('Date/time value is missing');
-  }
-
-  try {
-    // Handle different date formats
-    let parsedDate: Date;
-
-    // If value is already a Date object
-    if (value instanceof Date) {
-      parsedDate = value;
-    }
-    // If value is a number (timestamp)
-    else if (typeof value === 'number') {
-      parsedDate = new Date(value);
-    }
-    // If value is a string
-    else {
-      const dateStr = String(value).trim();
-      
-      // Try ISO format first
-      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-        parsedDate = new Date(dateStr);
-      }
-      // Try dd-MM-yyyy HH:mm format
-      else {
-        parsedDate = parseDate(dateStr, 'dd-MM-yyyy HH:mm', new Date());
-      }
-    }
-
-    // Validate the parsed date
-    if (!isValid(parsedDate)) {
-      console.error('[FileParser] Invalid date:', {
-        input: value,
-        parsed: parsedDate
-      });
-      throw new Error('Invalid date');
-    }
-
-    const formatted = format(parsedDate, 'yyyy-MM-dd HH:mm:ss');
-    console.debug('[FileParser] Date formatted successfully:', {
-      input: value,
-      parsed: parsedDate,
-      formatted
-    });
-
-    return formatted;
-  } catch (error) {
-    console.error('[FileParser] Error formatting date/time:', {
-      value,
-      error
-    });
-    throw new Error('Invalid date/time format');
-  }
-}
-
-// Format date for display
-export const formatDisplayDate = (dateString: string): string => {
-  if (!dateString) return '';
-  try {
-    const date = new Date(dateString);
-    if (!isValid(date)) return '';
-    return format(date, 'dd MMMM yyyy');
-  } catch (error) {
-    console.error('[FileParser] Error formatting display date:', {
-      dateString,
-      error
-    });
-    return '';
-  }
-};
-
-// Format time for display
-export const formatDisplayTime = (dateString: string): string => {
-  if (!dateString) return '';
-  try {
-    const date = new Date(dateString);
-    if (!isValid(date)) return '';
-    return format(date, 'HH:mm');
-  } catch (error) {
-    console.error('[FileParser] Error formatting display time:', {
-      dateString,
-      error
-    });
-    return '';
-  }
-};
 
 // Convert assignment response to table rows
 export const convertResponseToTableRows = (response: RosterResponse): JobTableRow[] => {
