@@ -1,4 +1,4 @@
-import { Job, Salesman, JobTableRow, RosterResponse, Location } from '@/types/types';
+import { Job, Salesman, Location } from '@/types/types';
 import { ColumnMatch, matchColumns, type DatasetType, type MatchResult } from './columnMatcher';
 import { formatDateTime } from './formatDateTime';
 
@@ -25,7 +25,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
 
   if (!rawData.length) { return noDataToParse() };
 
-  const matchResult = matchColumns(rawData[0]);
+  const matchResult = matchColumnsInData(rawData[0]);
 
   const errors: ParseError[] = [];
   const parsedData: (Job | Salesman)[] = [];
@@ -76,7 +76,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
     errors
   };
 
-  function matchColumns(headerRow: any) {
+  function matchColumnsInData(headerRow: any) {
     const columns = Object.keys(headerRow);
     console.debug('[FileParser] Detected columns:', columns);
 
@@ -223,77 +223,3 @@ function validateRequiredFields<T>(obj: T, rowIndex: number): void {
     }
   }
 }
-
-// Convert assignment response to table rows
-export const convertResponseToTableRows = (response: RosterResponse): JobTableRow[] => {
-  console.log('[FileParser] Converting response to table rows:', response);
-  
-  const rows: JobTableRow[] = [];
-  
-  // Process assigned jobs
-  Object.entries(response.jobs).forEach(([salesman_id, jobs]) => {
-    jobs.forEach(job => {
-      rows.push({
-        job_id: job.job_id,
-        date: job.date,
-        latitude: job.location[0],
-        longitude: job.location[1],
-        duration_mins: job.duration_mins,
-        entry_time: job.entry_time,
-        exit_time: job.exit_time,
-        assignment_status: 'Assigned',
-        salesman_id: salesman_id,
-        start_time: job.start_time,
-      });
-    });
-  });
-  
-  // Process unassigned jobs
-  response.unassigned_jobs.forEach(job => {
-    rows.push({
-      job_id: job.job_id,
-      date: job.date,
-      latitude: job.location[0],
-      longitude: job.location[1],
-      duration_mins: job.duration_mins,
-      entry_time: job.entry_time,
-      exit_time: job.exit_time,
-      assignment_status: 'Unassigned',
-      salesman_id: null,
-      start_time: null,
-    });
-  });
-
-  console.log('[FileParser] Conversion complete:', {
-    totalRows: rows.length,
-    assignedJobs: rows.filter(r => r.assignment_status === 'Assigned').length,
-    unassignedJobs: rows.filter(r => r.assignment_status === 'Unassigned').length
-  });
-  
-  return rows;
-};
-
-// Convert table data to CSV
-export const exportTableToCSV = (rows: any[]): string => {
-  console.log('[FileParser] Exporting table data to CSV:', {
-    rowCount: rows.length
-  });
-  return Papa.unparse(rows);
-};
-
-// Download data as CSV file
-export const downloadCSV = (data: string, filename: string): void => {
-  console.log('[FileParser] Downloading CSV file:', {
-    filename,
-    dataSize: data.length
-  });
-
-  const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', filename);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};

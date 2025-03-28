@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { parseFile, convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/fileParser';
+import { parseFile } from '@/lib/fileParser';
+import { convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { readFile } from '@/lib/fileReader';
 import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
 import { assignJobs } from '@/services/api';
 import { fadeIn } from '@/lib/motion';
-import { Job, Salesman, JobTableRow } from '@/types/types';
-import { RosterRequest } from "@/types/roster";
+import { Job, Salesman, JobTableRow, RosterRequest } from '@/types/types';
 import { Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import Map from '@/components/Map';
 import StatusBanner from '@/components/StatusBanner';
@@ -90,7 +90,7 @@ const Index = () => {
 
         if (parseResult.skippedRows > 0) {
           toast({
-            variant: "warning",
+            variant: "default",
             title: "Skipped rows",
             description: `${parseResult.skippedRows} row${parseResult.skippedRows > 1 ? 's were' : ' was'} skipped in ${file.name}`,
           });
@@ -361,7 +361,7 @@ const Index = () => {
                             {parsedSalesmen.map((salesman, index) => (
                               <TableRow key={index}>
                                 <TableCell>{salesman.salesman_id}</TableCell>
-                                <TableCell>[{salesman.home_location[0].toFixed(4)}, {salesman.home_location[1].toFixed(4)}]</TableCell>
+                                <TableCell>[{salesman.location[0].toFixed(4)}, {salesman.location[1].toFixed(4)}]</TableCell>
                                 <TableCell>{formatDisplayTime(salesman.start_time)}</TableCell>
                                 <TableCell>{formatDisplayTime(salesman.end_time)}</TableCell>
                               </TableRow>
