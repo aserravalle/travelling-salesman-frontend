@@ -1,8 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parseFile, readFile } from '@/lib/fileParser';
+import { parseFile } from '@/lib/fileParser';
 import { Job, Salesman } from '@/types/types';
-import fs from 'fs';
+import { readFileForTest } from './testHelpers';
 import path from 'path';
+
+// Mock Papa Parse
+vi.mock('papaparse', () => ({
+  default: {
+    parse: vi.fn()
+  }
+}));
+
+// Mock XLSX
+vi.mock('xlsx', () => ({
+  read: vi.fn(),
+  utils: {
+    sheet_to_json: vi.fn()
+  }
+}));
 
 describe('fileParser', () => {
   beforeEach(() => {
@@ -11,10 +26,8 @@ describe('fileParser', () => {
 
   describe('parse', () => {
     it('should parse jobs_constrained.csv data correctly', async () => {
-      const filePath = path.join(process.cwd(), 'test', 'jobs_constrained.csv');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const mockFile = new File([fileContent], 'jobs_constrained.csv', { type: 'text/csv' });
-      const rawData = await readFile(mockFile);
+      const filePath = path.join(process.cwd(), 'test', '03_jobs_constrained.csv');
+      const rawData = await readFileForTest(filePath);
 
       const result = parseFile(rawData.data);
       
@@ -34,9 +47,7 @@ describe('fileParser', () => {
 
     it('should parse salesmen.csv data correctly', async () => {
       const filePath = path.join(process.cwd(), 'test', '01_salesmen.csv');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const mockFile = new File([fileContent], '01_salesmen.csv', { type: 'text/csv' });
-      const rawData = await readFile(mockFile);
+      const rawData = await readFileForTest(filePath);
 
       const result = parseFile(rawData.data);
       

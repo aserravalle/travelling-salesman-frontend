@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readFile } from '../fileReader';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import fs from 'fs';
 import path from 'path';
+import { readFileForTest } from './testHelpers';
 
 // Mock Papa Parse
 vi.mock('papaparse', () => ({
@@ -130,30 +130,8 @@ describe('fileReader', () => {
     });
   
     it('should read jobs_constrained.csv correctly', async () => {
-      // Read the test file content
       const filePath = path.join(process.cwd(), 'test', '03_jobs_constrained.csv');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const mockFile = new File([fileContent], 'jobs_constrained.csv', { type: 'text/csv' });
-  
-      // Mock Papa Parse to use actual file content
-      (Papa.parse as any).mockImplementation((file, config) => {
-        const lines = fileContent.split('\n');
-        const headers = lines[0].split(',');
-        const data = lines.slice(1).map(line => {
-          const values = line.split(',');
-          return headers.reduce((obj, header, index) => {
-            obj[header] = values[index];
-            return obj;
-          }, {} as any);
-        });
-        config.complete({
-          data,
-          errors: [],
-          meta: { fields: headers }
-        });
-      });
-  
-      const result = await readFile(mockFile);
+      const result = await readFileForTest(filePath);
       
       expect(result.data).toBeDefined();
       expect(result.data.length).toBe(51);
@@ -172,30 +150,8 @@ describe('fileReader', () => {
     });
   
     it('should read salesmen.csv correctly', async () => {
-      // Read the test file content
       const filePath = path.join(process.cwd(), 'test', '01_salesmen.csv');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const mockFile = new File([fileContent], 'salesmen.csv', { type: 'text/csv' });
-  
-      // Mock Papa Parse to use actual file content
-      (Papa.parse as any).mockImplementation((file, config) => {
-        const lines = fileContent.split('\n');
-        const headers = lines[0].split(',');
-        const data = lines.slice(1).map(line => {
-          const values = line.split(',');
-          return headers.reduce((obj, header, index) => {
-            obj[header] = values[index];
-            return obj;
-          }, {} as any);
-        });
-        config.complete({
-          data,
-          errors: [],
-          meta: { fields: headers }
-        });
-      });
-  
-      const result = await readFile(mockFile);
+      const result = await readFileForTest(filePath);
       
       expect(result.data).toBeDefined();
       expect(result.data.length).toBe(10);

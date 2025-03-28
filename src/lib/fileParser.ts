@@ -1,7 +1,4 @@
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
-import { Job, Salesman, JobTableRow } from '@/types/types';
-import { RosterResponse } from "@/types/roster";
+import { Job, Salesman, JobTableRow, RosterResponse } from '@/types/types';
 import { matchColumns, type DatasetType, type MatchResult } from './columnMatcher';
 import { formatDateTime } from './formatDateTime';
 
@@ -18,162 +15,6 @@ export interface ParseResult<T> {
   skippedRows: number;
   errors: ParseError[];
 }
-
-export interface ReadResult {
-  data: any[];
-  fileName: string;
-  errors: ParseError[];
-  debug?: any; // For additional debug information
-}
-
-interface ReadFileResult {
-  rawData: any[];
-  errors: ParseError[];
-  debug: any;
-}
-
-async function tryReadCsv(file: File): Promise<ReadFileResult> {
-  console.log('[FileParser] Processing CSV file');
-  const result = await new Promise<Papa.ParseResult<any>>((resolve, reject) => {
-    Papa.parse(file, {
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        console.log('[FileParser] CSV parsing complete:', {
-          rowCount: results.data.length,
-          fields: results.meta.fields,
-          errors: results.errors
-        });
-        resolve(results);
-      },
-      error: (error) => {
-        console.error('[FileParser] CSV parsing error:', error);
-        reject(error);
-      }
-    });
-  });
-
-  const errors = result.errors.map(err => ({
-    row: err.row,
-    message: err.message,
-    details: err
-  }));
-
-  return {
-    rawData: result.data,
-    errors,
-    debug: { csvMeta: result.meta }
-  };
-}
-
-async function tryReadExcel(file: File): Promise<ReadFileResult> {
-  console.log('[FileParser] Processing Excel file');
-  const data = await new Promise<ArrayBuffer>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
-    reader.onerror = (e) => {
-      console.error('[FileParser] Excel file read error:', e);
-      reject(e);
-    };
-    reader.readAsArrayBuffer(file);
-  });
-
-  const workbook = XLSX.read(data, { type: 'array' });
-  console.log('[FileParser] Excel workbook loaded:', {
-    sheets: workbook.SheetNames,
-    props: workbook.Props
-  });
-
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  const debug = {
-    sheetName: workbook.SheetNames[0],
-    range: worksheet['!ref'],
-    dimensions: worksheet['!dimensions']
-  };
-
-  const rawData = XLSX.utils.sheet_to_json(worksheet);
-  console.log('[FileParser] Excel data converted to JSON:', {
-    rowCount: rawData.length,
-    sampleRow: rawData[0]
-  });
-
-  return {
-    rawData,
-    errors: [],
-    debug
-  };
-}
-
-// Read file and return raw data
-export const readFile = async (file: File): Promise<ReadResult> => {
-  console.log(`[FileParser] Reading file: ${file.name} (${file.type}, ${file.size} bytes)`);
-  
-  try {
-    let result: ReadFileResult;
-
-    if (file.name.endsWith('.csv')) {
-      result = await tryReadCsv(file);
-    } 
-    else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-      result = await tryReadExcel(file);
-    } 
-    else {
-      const error = new Error('Unsupported file format');
-      console.error('[FileParser] Unsupported format:', file.type);
-      throw error;
-    }
-
-    // Filter out empty rows
-    const validRows = result.rawData.filter(row => {
-      const hasValues = Object.values(row).some(value => 
-        value !== null && value !== undefined && value !== ''
-      );
-      if (!hasValues) {
-        console.debug('[FileParser] Skipping empty row:', row);
-      }
-      return hasValues;
-    });
-
-    const skippedRows = result.rawData.length - validRows.length;
-    if (skippedRows > 0) {
-      console.warn(`[FileParser] Skipped ${skippedRows} empty rows`);
-      result.errors.push({
-        message: `${skippedRows} empty row${skippedRows > 1 ? 's were' : ' was'} skipped`,
-        details: { skippedRows }
-      });
-    }
-
-    console.log('[FileParser] File processing complete:', {
-      fileName: file.name,
-      totalRows: result.rawData.length,
-      validRows: validRows.length,
-      skippedRows,
-      errorCount: result.errors.length
-    });
-
-    return {
-      data: validRows,
-      fileName: file.name,
-      errors: result.errors,
-      debug: result.debug
-    };
-  } catch (error) {
-    console.error('[FileParser] File processing error:', {
-      fileName: file.name,
-      error
-    });
-
-    return {
-      data: [],
-      fileName: file.name,
-      errors: [{
-        message: error instanceof Error ? error.message : 'Unknown error occurred while reading file',
-        details: error
-      }]
-    };
-  }
-};
 
 // Parse raw data into typed objects
 export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
@@ -200,7 +41,6 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
   const matchResult = matchColumns(columns);
   console.log('[FileParser] Column matching result:', {
     type: matchResult.type,
-    score: matchResult.job_score,
     matches: matchResult.columnMatches
   });
 
@@ -208,12 +48,9 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
   const parsedData: (Job | Salesman)[] = [];
   let skippedRows = 0;
 
-  if (matchResult.type === 'unknown' || matchResult.job_score < 0.5) {
+  if (matchResult.type === 'unknown') {
     console.error('[FileParser] Unable to identify dataset type:', {
-      score: matchResult.job_score,
-      requiredColumns: matchResult.type === 'job' ? 
-        Object.keys(matchResult.columnMatches) : 
-        Object.keys(matchResult.columnMatches)
+      requiredColumns: Object.keys(matchResult.columnMatches)
     });
 
     return {
@@ -221,7 +58,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
       type: 'unknown',
       skippedRows: 0,
       errors: [{
-        message: `Unable to identify dataset type. Match score: ${matchResult.job_score}`,
+        message: `Unable to identify dataset type.`,
         details: matchResult
       }]
     };
