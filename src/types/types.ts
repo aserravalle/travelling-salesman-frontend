@@ -40,8 +40,7 @@ export interface RosterResponse {
 export interface JobTableRow {
   job_id: string;
   date: string;
-  latitude: number;
-  longitude: number;
+  location: Location;
   duration_mins: number;
   entry_time: string;
   exit_time: string;
@@ -56,32 +55,4 @@ export interface JobTableRow {
   postcode?: string;
   city?: string;
   country?: string;
-}
-
-export interface JobColumnMapping {
-  job_id: string[];
-  date: string[];
-  latitude: string[];
-  longitude: string[];
-  duration_mins: string[];
-  entry_time: string[];
-  exit_time: string[];
-  customer?: string[];
-  address?: string[];
-  postcode?: string[];
-  city?: string[];
-  country?: string[];
-}
-
-export interface SalesmanColumnMapping {
-  salesman_id: string[];
-  home_latitude: string[];
-  home_longitude: string[];
-  start_time: string[];
-  end_time: string[];
-  name?: string[];
-  address?: string[];
-  suburb?: string[];
-  city?: string[];
-  country?: string[];
 }

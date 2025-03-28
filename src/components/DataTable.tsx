@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
-import { JobTableRow } from '@/types/types';
+import { JobTableRow, Location } from '@/types/types';
 import { cn } from '@/lib/utils';
 
 interface Column {
@@ -57,8 +57,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
     // Required columns
     { key: 'job_id', label: 'Job ID' },
     { key: 'date', label: 'Date' },
-    { key: 'latitude', label: 'Latitude' },
-    { key: 'longitude', label: 'Longitude' },
+    { key: 'location', label: 'Location' },
     { key: 'duration_mins', label: 'Duration (mins)' },
     { key: 'entry_time', label: 'Entry Time' },
     { key: 'exit_time', label: 'Exit Time' },
@@ -267,6 +266,14 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
                       cellContent = formatDisplayDate(row.date);
                     } else if (['entry_time', 'exit_time', 'start_time'].includes(column.key) && cellContent) {
                       cellContent = formatDisplayTime(String(cellContent));
+                    } else if (column.key === 'location' && cellContent) {
+                      const location = cellContent as unknown as Location;
+                      cellContent = 'latitude' in location && 'longitude' in location
+                        ? `[${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}]`
+                        : location.address || '-';
+                      if ('latitude' in location && 'longitude' in location && location.address) {
+                        cellContent += ` (${location.address})`;
+                      }
                     }
                     
                     return (

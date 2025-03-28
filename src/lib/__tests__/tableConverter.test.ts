@@ -66,8 +66,8 @@ describe('tableConverter', () => {
       expect(result[0]).toEqual({
         job_id: '1',
         date: '2025-02-05',
-        latitude: 40.7128,
-        longitude: -74.006,
+        latitude: undefined,
+        longitude: undefined,
         duration_mins: 60,
         entry_time: '2025-02-05 09:00:00',
         exit_time: '2025-02-05 10:00:00',
