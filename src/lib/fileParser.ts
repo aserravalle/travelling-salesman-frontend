@@ -1,5 +1,5 @@
-import { Job, Salesman, JobTableRow, RosterResponse } from '@/types/types';
-import { matchColumns, type DatasetType, type MatchResult } from './columnMatcher';
+import { Job, Salesman, JobTableRow, RosterResponse, Location } from '@/types/types';
+import { ColumnMatch, matchColumns, type DatasetType, type MatchResult } from './columnMatcher';
 import { formatDateTime } from './formatDateTime';
 
 export interface ParseError {
@@ -23,61 +23,26 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
     firstRow: rawData[0]
   });
 
-  if (!rawData.length) {
-    console.warn('[FileParser] No data to parse');
-    return {
-      data: [],
-      type: 'unknown',
-      skippedRows: 0,
-      errors: [{
-        message: 'No data to parse'
-      }]
-    };
-  }
+  if (!rawData.length) { return noDataToParse() };
 
-  const columns = Object.keys(rawData[0]);
-  console.log('[FileParser] Detected columns:', columns);
-
-  const matchResult = matchColumns(columns);
-  console.log('[FileParser] Column matching result:', {
-    type: matchResult.type,
-    matches: matchResult.columnMatches
-  });
+  const matchResult = matchColumns(rawData[0]);
 
   const errors: ParseError[] = [];
   const parsedData: (Job | Salesman)[] = [];
   let skippedRows = 0;
 
-  if (matchResult.type === 'unknown') {
-    console.error('[FileParser] Unable to identify dataset type:', {
-      requiredColumns: Object.keys(matchResult.columnMatches)
-    });
+  if (matchResult.type === 'unknown') { return unknownDataSetType() }
 
-    return {
-      data: [],
-      type: 'unknown',
-      skippedRows: 0,
-      errors: [{
-        message: `Unable to identify dataset type.`,
-        details: matchResult
-      }]
-    };
-  }
+  const parseRow = matchResult.type === 'job' ? parseJobRow : parseSalesmanRow;
 
   for (let i = 0; i < rawData.length; i++) {
     try {
       const row = rawData[i];
       console.debug(`[FileParser] Processing row ${i + 1}:`, row);
       
-      if (matchResult.type === 'job') {
-        const job = parseJobRow(row, matchResult, i);
-        parsedData.push(job);
-        console.debug(`[FileParser] Successfully parsed job:`, job);
-      } else {
-        const salesman = parseSalesmanRow(row, matchResult, i);
-        parsedData.push(salesman);
-        console.debug(`[FileParser] Successfully parsed salesman:`, salesman);
-      }
+      const parsedRow = parseRow(row, matchResult, i);
+      parsedData.push(parsedRow);
+      console.debug(`[FileParser] Successfully parsed ${matchResult.type}:`, parsedRow);
     } catch (error) {
       skippedRows++;
       console.error(`[FileParser] Error parsing row ${i + 1}:`, {
@@ -110,7 +75,47 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
     skippedRows,
     errors
   };
+
+  function matchColumns(headerRow: any) {
+    const columns = Object.keys(headerRow);
+    console.debug('[FileParser] Detected columns:', columns);
+
+    const matchResult = matchColumns(columns);
+    console.debug('[FileParser] Column matching result:', {
+      type: matchResult.type,
+      matches: matchResult.columnMatches
+    });
+    return matchResult;
+  }
+
+  function unknownDataSetType(): ParseResult<Job | Salesman> {
+    console.error('[FileParser] Unable to identify dataset type:', {
+      requiredColumns: Object.keys(matchResult.columnMatches)
+    });
+    return {
+      data: [],
+      type: 'unknown',
+      skippedRows: 0,
+      errors: [{
+        message: `Unable to identify dataset type.`,
+        details: matchResult
+      }]
+    };
+  }
+
+  function noDataToParse(): ParseResult<Job | Salesman> {
+    console.warn('[FileParser] No data to parse');
+    return {
+      data: [],
+      type: 'unknown',
+      skippedRows: 0,
+      errors: [{
+        message: 'No data to parse'
+      }]
+    };
+  }
 };
+
 
 function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job {
   const { columnMatches } = matchResult;
@@ -121,18 +126,7 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
       columnMatches
     });
 
-    const latitude = parseFloat(row[columnMatches.latitude]);
-    const longitude = parseFloat(row[columnMatches.longitude]);
-    
-    if (isNaN(latitude) || isNaN(longitude)) {
-      console.error(`[FileParser] Invalid coordinates in row ${rowIndex + 1}:`, {
-        latitude,
-        longitude,
-        rawLat: row[columnMatches.latitude],
-        rawLng: row[columnMatches.longitude]
-      });
-      throw new Error('Invalid location coordinates');
-    }
+    const location = parseLocation(columnMatches, row, rowIndex);
 
     const duration = parseInt(row[columnMatches.duration_mins]);
     if (isNaN(duration)) {
@@ -145,8 +139,9 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
 
     const job: Job = {
       job_id: String(row[columnMatches.job_id]),
+      client_name: String(row[columnMatches.client_name]),
       date: formatDateTime(row[columnMatches.date]),
-      location: [latitude, longitude],
+      location,
       duration_mins: duration,
       entry_time: formatDateTime(row[columnMatches.entry_time]),
       exit_time: formatDateTime(row[columnMatches.exit_time])
@@ -172,22 +167,12 @@ function parseSalesmanRow(row: any, matchResult: MatchResult, rowIndex: number):
       columnMatches
     });
 
-    const latitude = parseFloat(row[columnMatches.home_latitude]);
-    const longitude = parseFloat(row[columnMatches.home_longitude]);
-    
-    if (isNaN(latitude) || isNaN(longitude)) {
-      console.error(`[FileParser] Invalid home coordinates in row ${rowIndex + 1}:`, {
-        latitude,
-        longitude,
-        rawLat: row[columnMatches.home_latitude],
-        rawLng: row[columnMatches.home_longitude]
-      });
-      throw new Error('Invalid home location coordinates');
-    }
+    const location = parseLocation(columnMatches, row, rowIndex);
 
     const salesman: Salesman = {
       salesman_id: String(row[columnMatches.salesman_id]),
-      home_location: [latitude, longitude],
+      salesman_name: String(row[columnMatches.salesman_name]),
+      location,
       start_time: formatDateTime(row[columnMatches.start_time]),
       end_time: formatDateTime(row[columnMatches.end_time])
     };
@@ -201,6 +186,28 @@ function parseSalesmanRow(row: any, matchResult: MatchResult, rowIndex: number):
     });
     throw new Error(`Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`);
   }
+}
+
+function parseLocation(columnMatches: ColumnMatch, row: any, rowIndex: number) {
+  let location: Location;
+  if (columnMatches.address && row[columnMatches.address]) {
+  location = { address: row[columnMatches.address] };
+  } else {
+    const latitude = parseFloat(row[columnMatches.latitude]);
+    const longitude = parseFloat(row[columnMatches.longitude]);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      console.error(`[FileParser] Invalid coordinates in row ${rowIndex + 1}:`, {
+        latitude,
+        longitude,
+        rawLat: row[columnMatches.latitude],
+        rawLng: row[columnMatches.longitude]
+      });
+      throw new Error('Invalid location coordinates');
+    }
+    location = { latitude, longitude };
+  }
+  return location;
 }
 
 function validateRequiredFields<T>(obj: T, rowIndex: number): void {

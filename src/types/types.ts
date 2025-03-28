@@ -1,10 +1,14 @@
+export type Location = 
+  | { address: string; latitude: number; longitude: number; }
+  | { latitude: number; longitude: number; } // lat & long given, no address
+  | { address: string; } // address given, no lat/long
+
+
 export interface Job {
   job_id: string;
   client_name: string;
   date: string;
-  latitude: number;
-  longitude: number;
-  address: string;
+  location: Location;
   duration_mins: number;
   entry_time: string;
   exit_time: string;
@@ -13,9 +17,7 @@ export interface Job {
 export interface Salesman {
   salesman_id: string;
   salesman_name: string;
-  latitude: number;
-  longitude: number;
-  address: string;
+  location: Location;
   start_time: string;
   end_time: string;
 }
