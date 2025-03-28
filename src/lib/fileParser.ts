@@ -1,6 +1,19 @@
 import { Job, Salesman, Location } from '@/types/types';
-import { ColumnMatch, matchColumns, type DatasetType, type MatchResult } from './columnMatcher';
+import { 
+  ColumnMatch, 
+  matchColumns, 
+  type DatasetType, 
+  type MatchResult, 
+  determineDatasetType, 
+  determineDatasetTypeByColumnMatching,
+  findBestColumnMatch 
+} from './columnMatcher';
 import { formatDateTime } from './formatDateTime';
+import { 
+  ADDRESS_COLUMN_MAPPINGS,
+  JOB_COLUMN_MAPPINGS,
+  SALESMAN_COLUMN_MAPPINGS
+} from './columnMappings';
 
 export interface ParseError {
   row?: number;
@@ -17,36 +30,41 @@ export interface ParseResult<T> {
 }
 
 // Parse raw data into typed objects
-export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
+export const parseFile = (rawData: any[], fileName?: string): ParseResult<Job | Salesman> => {
   console.log('[FileParser] Starting data parsing:', {
     rowCount: rawData.length,
-    firstRow: rawData[0]
+    firstRow: rawData[0],
+    fileName
   });
 
   if (!rawData.length) { return noDataToParse() };
 
-  let matchResult = matchColumnsInData(rawData[0]);
+  const columns = Object.keys(rawData[0]);
+  console.debug('[FileParser] Detected columns:', columns);
 
-  if (matchResult.type === 'unknown') { return unknownDataSetType() }
-  if (matchResult.type === 'missingLocation') { return missingLocationType() }
-  if (matchResult.type === 'missingRequiredJobFields') { return missingRequiredJobFieldsType() }
-  if (matchResult.type === 'missingRequiredSalesmanFields') { return missingRequiredSalesmanFieldsType() }
+  // First determine the dataset type using file name and basic checks
+  let type = determineDatasetType(columns, fileName);
+  
+  if (type === 'unknown') { return unknownDataSetType() }
+  if (type === 'missingLocation') { return missingLocationType() }
+  if (type === 'missingRequiredJobFields') { return missingRequiredJobFieldsType() }
+  if (type === 'missingRequiredSalesmanFields') { return missingRequiredSalesmanFieldsType() }
 
   const errors: ParseError[] = [];
   const parsedData: (Job | Salesman)[] = [];
   let skippedRows = 0;
 
-  const parseRow = matchResult.type === 'job' ? parseJobRow : parseSalesmanRow;
+  const parseRow = type === 'job' ? parseJobRow : parseSalesmanRow;
 
   for (let i = 0; i < rawData.length; i++) {
     try {
       const row = rawData[i];
       console.debug(`[FileParser] Processing row ${i + 1}:`, row);
       
-      matchResult = matchColumnsInData(row);
+      const matchResult = matchColumns(Object.keys(row), type);
       const parsedRow = parseRow(row, matchResult, i);
       parsedData.push(parsedRow);
-      console.debug(`[FileParser] Successfully parsed ${matchResult.type}:`, parsedRow);
+      console.debug(`[FileParser] Successfully parsed ${type}:`, parsedRow);
     } catch (error) {
       skippedRows++;
       console.error(`[FileParser] Error parsing row ${i + 1}:`, {
@@ -66,7 +84,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
   }
 
   console.log('[FileParser] Parsing complete:', {
-    type: matchResult.type,
+    type,
     totalRows: rawData.length,
     parsedRows: parsedData.length,
     skippedRows,
@@ -75,26 +93,14 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
 
   return {
     data: parsedData as any[],
-    type: matchResult.type,
+    type,
     skippedRows,
     errors
   };
 
-  function matchColumnsInData(headerRow: any) {
-    const columns = Object.keys(headerRow);
-    console.debug('[FileParser] Detected columns:', columns);
-
-    const matchResult = matchColumns(columns);
-    console.debug('[FileParser] Column matching result:', {
-      type: matchResult.type,
-      matches: matchResult.columnMatches
-    });
-    return matchResult;
-  }
-
   function unknownDataSetType(): ParseResult<Job | Salesman> {
     console.error('[FileParser] Unable to identify dataset type:', {
-      requiredColumns: Object.keys(matchResult.columnMatches)
+      columns
     });
     return {
       data: [],
@@ -102,14 +108,14 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
       skippedRows: 0,
       errors: [{
         message: `Unable to identify dataset type.`,
-        details: matchResult
+        details: { columns }
       }]
     };
   }
 
   function missingLocationType(): ParseResult<Job | Salesman> {
     console.error('[FileParser] Missing location in dataset:', {
-      requiredColumns: Object.keys(matchResult.columnMatches)
+      columns
     });
     return {
       data: [],
@@ -117,23 +123,24 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
       skippedRows: 0,
       errors: [{
         message: `Missing location in dataset.`,
-        details: matchResult
+        details: { columns }
       }]
     };
   }
 
   function missingRequiredSalesmanFieldsType(): ParseResult<Salesman> {
-    const hasSalesmanRequiredFields = !!(matchResult.columnMatches.start_time && matchResult.columnMatches.end_time);
+    const matches = findBestColumnMatch(columns, SALESMAN_COLUMN_MAPPINGS);
+    const hasSalesmanRequiredFields = !!(matches.start_time && matches.end_time);
     
     const missingFields = [];
     if (!hasSalesmanRequiredFields) {
-      if (!matchResult.columnMatches.start_time) missingFields.push('start_time');
-      if (!matchResult.columnMatches.end_time) missingFields.push('end_time');
+      if (!matches.start_time) missingFields.push('start_time');
+      if (!matches.end_time) missingFields.push('end_time');
     }
 
     console.error('[FileParser] Missing required fields in Salesman dataset:', {
       missingFields,
-      columnMatches: matchResult.columnMatches
+      columnMatches: matches
     });
 
     return {
@@ -144,25 +151,26 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
         message: `Missing required Salesman fields: ${missingFields.join(', ')}`,
         details: {
           missingFields,
-          columnMatches: matchResult.columnMatches
+          columnMatches: matches
         }
       }]
     };
   }
 
   function missingRequiredJobFieldsType(): ParseResult<Job | Salesman> {
-    const hasJobRequiredFields = !!(matchResult.columnMatches.entry_time && matchResult.columnMatches.exit_time && matchResult.columnMatches.duration_mins);
+    const matches = findBestColumnMatch(columns, JOB_COLUMN_MAPPINGS);
+    const hasJobRequiredFields = !!(matches.entry_time && matches.exit_time && matches.duration_mins);
     
     const missingFields = [];
     if (!hasJobRequiredFields) {
-      if (!matchResult.columnMatches.entry_time) missingFields.push('entry_time');
-      if (!matchResult.columnMatches.exit_time) missingFields.push('exit_time');
-      if (!matchResult.columnMatches.duration_mins) missingFields.push('duration_mins');
+      if (!matches.entry_time) missingFields.push('entry_time');
+      if (!matches.exit_time) missingFields.push('exit_time');
+      if (!matches.duration_mins) missingFields.push('duration_mins');
     }
 
     console.error('[FileParser] Missing required Job fields:', {
       missingFields,
-      columnMatches: matchResult.columnMatches
+      columnMatches: matches
     });
 
     return {
@@ -173,7 +181,7 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
         message: `Missing required Job fields: ${missingFields.join(', ')}`,
         details: {
           missingFields,
-          columnMatches: matchResult.columnMatches
+          columnMatches: matches
         }
       }]
     };
@@ -192,6 +200,9 @@ export const parseFile = (rawData: any[]): ParseResult<Job | Salesman> => {
   }
 };
 
+// Track ID counters for inference
+let nextJobId = 1;
+let nextSalesmanId = 101;
 
 function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job {
   const { columnMatches } = matchResult;
@@ -213,8 +224,13 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
       throw new Error('Invalid duration');
     }
 
+    // Infer job_id if missing
+    const jobId = columnMatches.job_id ? 
+      String(row[columnMatches.job_id]) : 
+      String(nextJobId++);
+
     const job: Job = {
-      job_id: String(row[columnMatches.job_id]),
+      job_id: jobId,
       client_name: String(row[columnMatches.client_name]),
       date: formatDateTime(row[columnMatches.date]),
       location,
@@ -245,8 +261,13 @@ function parseSalesmanRow(row: any, matchResult: MatchResult, rowIndex: number):
 
     const location = parseLocation(columnMatches, row, rowIndex);
 
+    // Infer salesman_id if missing
+    const salesmanId = columnMatches.salesman_id ? 
+      String(row[columnMatches.salesman_id]) : 
+      String(nextSalesmanId++);
+
     const salesman: Salesman = {
-      salesman_id: String(row[columnMatches.salesman_id]),
+      salesman_id: salesmanId,
       salesman_name: String(row[columnMatches.salesman_name]),
       location,
       start_time: formatDateTime(row[columnMatches.start_time]),
@@ -277,9 +298,10 @@ function parseLocation(columnMatches: ColumnMatch, row: any, rowIndex: number): 
       // If we have valid coordinates, return location with coordinates
       const location: Location = { latitude, longitude };
       
-      // Optionally add address if available
-      if (hasValue(columnMatches.address)) {
-        location.address = row[columnMatches.address];
+      // Add concatenated address if any address fields are available
+      const address = buildAddressString(columnMatches, row);
+      if (address) {
+        location.address = address;
       }
       
       return location;
@@ -294,12 +316,36 @@ function parseLocation(columnMatches: ColumnMatch, row: any, rowIndex: number): 
   }
 
   // If we have an address but no valid coordinates, return address-only location
-  if (hasValue(columnMatches.address)) {
-    return { address: row[columnMatches.address] };
+  const address = buildAddressString(columnMatches, row);
+  if (address) {
+    return { address };
   }
 
   // If we get here, we have no valid location data
   throw new Error(`No valid location data found in row ${rowIndex + 1}`);
+}
+
+function buildAddressString(columnMatches: ColumnMatch, row: any): string | null {
+  const addressParts: string[] = [];
+
+  // Iterate through ADDRESS_COLUMN_MAPPINGS in order
+  for (const [field, possibleColumns] of Object.entries(ADDRESS_COLUMN_MAPPINGS)) {
+    // Find the first matching column that has a value
+    for (const column of possibleColumns) {
+      if (columnMatches[column] && row[columnMatches[column]]) {
+        addressParts.push(row[columnMatches[column]]);
+        break;
+      }
+    }
+  }
+
+  // Return null if no address parts were found
+  if (addressParts.length === 0) {
+    return null;
+  }
+
+  // Join all parts with commas
+  return addressParts.join(', ');
 }
 
 function validateRequiredFields<T>(obj: T, rowIndex: number): void {
