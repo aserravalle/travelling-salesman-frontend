@@ -221,7 +221,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950 dark:to-blue-950">
       <header className="border-b shadow-sm bg-white/50 backdrop-blur-sm">
-        <div className="container mx-auto py-6">
+        <div className="container mx-auto py-6 px-4">
           <h1 className="text-3xl font-bold tracking-tight text-sky-950 dark:text-sky-100 bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">Travelling Salesman</h1>
           <p className="text-muted-foreground mt-1">
             Get optimal delivery routes for your travelling salesmen
@@ -229,232 +229,230 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto py-8">
+      <main className="py-8 px-10">
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
           className="space-y-8"
         >
-          <div className="flex justify-between items-center">
-            <TabsList className="shadow-md">
-              <TabsTrigger value="upload">Upload Files</TabsTrigger>
-              <TabsTrigger value="results" disabled={!hasResults}>
-                Assignment Results
-              </TabsTrigger>
-            </TabsList>
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center">
+              <TabsList className="shadow-md">
+                <TabsTrigger value="upload">Upload Files</TabsTrigger>
+                <TabsTrigger value="results" disabled={!hasResults}>
+                  Assignment Results
+                </TabsTrigger>
+              </TabsList>
 
-            {activeTab === 'results' && (
-              <Button 
-                variant="outline" 
-                onClick={handleExport}
-                className="flex items-center gap-2 shadow-sm hover:shadow"
-              >
-                <Download className="w-4 h-4" />
-                Export CSV
-              </Button>
-            )}
+              {activeTab === 'results' && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleExport}
+                  className="flex items-center gap-2 shadow-sm hover:shadow"
+                >
+                  <Download className="w-4 h-4" />
+                  Export CSV
+                </Button>
+              )}
+            </div>
           </div>
 
           <TabsContent value="upload" className="space-y-8">
-            <div className="max-w-3xl mx-auto">
-              <motion.div
-                variants={fadeIn('up', 0.1)}
-                initial="hidden"
-                animate="show"
-              >
-                <FileUpload
-                  label="Smart Upload"
-                  description="Upload your Jobs and Salesmen files - our system will automatically detect which is which"
-                  onFilesSelected={handleFilesSelected}
-                  accept=".csv,.xlsx,.xls"
-                  files={uploadedFiles}
-                  multiple={true}
-                />
-              </motion.div>
-            </div>
+            <div className="px-4">
+              <div className="grid xl:grid-cols-[minmax(0,420px)_1fr] gap-8 max-xl:space-y-8">
+                <motion.div
+                  variants={fadeIn('up', 0.1)}
+                  initial="hidden"
+                  animate="show"
+                  className="xl:sticky xl:top-8 xl:self-start w-full max-w-[420px] mx-auto"
+                >
+                  <FileUpload
+                    label="Smart Upload"
+                    description="Upload your Jobs and Salesmen files - our system will automatically detect which is which"
+                    onFilesSelected={handleFilesSelected}
+                    accept=".csv,.xlsx,.xls"
+                    files={uploadedFiles}
+                    multiple={true}
+                  />
+                </motion.div>
 
-            {(parsedJobs.length > 0 || parsedSalesmen.length > 0) && (
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  {parsedJobs.length > 0 ? (
-                    <motion.div
-                      variants={fadeIn('right', 0.2)}
-                      initial="hidden"
-                      animate="show"
-                      className="rounded-md border shadow-md bg-white"
-                    >
-                      <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            Jobs Data Preview
-                          </h3>
-                          <span className="text-sm text-muted-foreground">{parsedJobs.length} jobs</span>
-                        </div>
-                      </div>
-                      <div className="h-[250px] overflow-auto p-0">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Job ID</TableHead>
-                              <TableHead>Client Name</TableHead>
-                              <TableHead>Date</TableHead>
-                              <TableHead>Coordinates</TableHead>
-                              <TableHead>Address</TableHead>
-                              <TableHead>Duration</TableHead>
-                              <TableHead>Entry Time</TableHead>
-                              <TableHead>Exit Time</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {parsedJobs.map((job, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{job.job_id}</TableCell>
-                                <TableCell>{job.client_name || '-'}</TableCell>
-                                <TableCell>{formatDisplayDate(job.date)}</TableCell>
-                                <TableCell>
-                                  {job.location.latitude && job.location.longitude 
-                                    ? `[${job.location.latitude.toFixed(4)}, ${job.location.longitude.toFixed(4)}]`
-                                    : '-'
-                                  }
-                                </TableCell>
-                                <TableCell>{job.location.address || '-'}</TableCell>
-                                <TableCell>{job.duration_mins} mins</TableCell>
-                                <TableCell>{formatDisplayTime(job.entry_time)}</TableCell>
-                                <TableCell>{formatDisplayTime(job.exit_time)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </motion.div>
+                <div className="space-y-8">
+                  {(parsedJobs.length > 0 || parsedSalesmen.length > 0) ? (
+                    <>
+                      {parsedSalesmen.length > 0 && (
+                        <motion.div
+                          variants={fadeIn('up', 0.2)}
+                          initial="hidden"
+                          animate="show"
+                          className="rounded-md border shadow-md bg-white"
+                        >
+                          <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-medium flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                Salesmen Data Preview
+                              </h3>
+                              <span className="text-sm text-muted-foreground">{parsedSalesmen.length} salesmen</span>
+                            </div>
+                          </div>
+                          <div className="h-[250px] overflow-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Salesman ID</TableHead>
+                                  <TableHead>Salesman Name</TableHead>
+                                  <TableHead>Coordinates</TableHead>
+                                  <TableHead>Address</TableHead>
+                                  <TableHead>Start Time</TableHead>
+                                  <TableHead>End Time</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {parsedSalesmen.map((salesman, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{salesman.salesman_id}</TableCell>
+                                    <TableCell>{salesman.salesman_name || '-'}</TableCell>
+                                    <TableCell>
+                                      {salesman.location.latitude && salesman.location.longitude 
+                                        ? `[${salesman.location.latitude.toFixed(4)}, ${salesman.location.longitude.toFixed(4)}]`
+                                        : '-'
+                                      }
+                                    </TableCell>
+                                    <TableCell>{salesman.location.address || '-'}</TableCell>
+                                    <TableCell>{formatDisplayTime(salesman.start_time)}</TableCell>
+                                    <TableCell>{formatDisplayTime(salesman.end_time)}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {parsedJobs.length > 0 && (
+                        <motion.div
+                          variants={fadeIn('up', 0.3)}
+                          initial="hidden"
+                          animate="show"
+                          className="rounded-md border shadow-md bg-white"
+                        >
+                          <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-medium flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                Jobs Data Preview
+                              </h3>
+                              <span className="text-sm text-muted-foreground">{parsedJobs.length} jobs</span>
+                            </div>
+                          </div>
+                          <div className="h-[250px] overflow-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Job ID</TableHead>
+                                  <TableHead>Client Name</TableHead>
+                                  <TableHead>Date</TableHead>
+                                  <TableHead>Coordinates</TableHead>
+                                  <TableHead>Address</TableHead>
+                                  <TableHead>Duration</TableHead>
+                                  <TableHead>Entry Time</TableHead>
+                                  <TableHead>Exit Time</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {parsedJobs.map((job, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{job.job_id}</TableCell>
+                                    <TableCell>{job.client_name || '-'}</TableCell>
+                                    <TableCell>{formatDisplayDate(job.date)}</TableCell>
+                                    <TableCell>
+                                      {job.location.latitude && job.location.longitude 
+                                        ? `[${job.location.latitude.toFixed(4)}, ${job.location.longitude.toFixed(4)}]`
+                                        : '-'
+                                      }
+                                    </TableCell>
+                                    <TableCell>{job.location.address || '-'}</TableCell>
+                                    <TableCell>{job.duration_mins} mins</TableCell>
+                                    <TableCell>{formatDisplayTime(job.entry_time)}</TableCell>
+                                    <TableCell>{formatDisplayTime(job.exit_time)}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </motion.div>
+                      )}
+                    </>
                   ) : (
                     <div className="h-[250px] flex items-center justify-center border rounded-md bg-white/50 shadow-md">
                       <div className="text-center text-muted-foreground">
-                        <p>No job data detected yet</p>
-                        <p className="text-sm">Upload a file with job data</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  {parsedSalesmen.length > 0 ? (
-                    <motion.div
-                      variants={fadeIn('left', 0.2)}
-                      initial="hidden"
-                      animate="show"
-                      className="rounded-md border shadow-md bg-white"
-                    >
-                      <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            Salesmen Data Preview
-                          </h3>
-                          <span className="text-sm text-muted-foreground">{parsedSalesmen.length} salesmen</span>
-                        </div>
-                      </div>
-                      <div className="h-[250px] overflow-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Salesman ID</TableHead>
-                              <TableHead>Salesman Name</TableHead>
-                              <TableHead>Coordinates</TableHead>
-                              <TableHead>Address</TableHead>
-                              <TableHead>Start Time</TableHead>
-                              <TableHead>End Time</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {parsedSalesmen.map((salesman, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{salesman.salesman_id}</TableCell>
-                                <TableCell>{salesman.salesman_name || '-'}</TableCell>
-                                <TableCell>
-                                  {salesman.location.latitude && salesman.location.longitude 
-                                    ? `[${salesman.location.latitude.toFixed(4)}, ${salesman.location.longitude.toFixed(4)}]`
-                                    : '-'
-                                  }
-                                </TableCell>
-                                <TableCell>{salesman.location.address || '-'}</TableCell>
-                                <TableCell>{formatDisplayTime(salesman.start_time)}</TableCell>
-                                <TableCell>{formatDisplayTime(salesman.end_time)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <div className="h-[250px] flex items-center justify-center border rounded-md bg-white/50 shadow-md">
-                      <div className="text-center text-muted-foreground">
-                        <p>No salesman data detected yet</p>
-                        <p className="text-sm">Upload a file with salesman data</p>
+                        <p>No data detected yet</p>
+                        <p className="text-sm">Upload your files to see the preview</p>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
-            )}
+            </div>
 
-            <div className="flex justify-center">
-              <Card className="bg-gradient-to-br from-sky-100/50 to-blue-100/50 dark:from-sky-900/30 dark:to-blue-900/20 max-w-lg w-full shadow-lg">
-                <CardHeader>
-                  <CardTitle>Ready to Process?</CardTitle>
-                  <CardDescription>
-                    {isReadyToProcess 
-                      ? "Your files are ready! Click the button below to proceed."
-                      : "Upload your files to begin the assignment process."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full ${parsedJobs.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span>{parsedJobs.length > 0 ? `${parsedJobs.length} jobs detected` : 'No jobs detected'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full ${parsedSalesmen.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span>{parsedSalesmen.length > 0 ? `${parsedSalesmen.length} salesmen detected` : 'No salesmen detected'}</span>
-                  </div>
-                  
-                  <div className="pt-4 flex gap-2">
-                    {(parsedJobs.length > 0 || parsedSalesmen.length > 0) && (
-                      <Button 
-                        variant="outline" 
-                        onClick={handleReset}
-                        className="flex-1 shadow-sm hover:shadow"
-                        disabled={isSubmitting || isProcessingFiles}
-                      >
-                        Reset Data
-                      </Button>
-                    )}
-                    <Button 
-                      onClick={handleSubmit}
-                      disabled={isSubmitting || !isReadyToProcess || isProcessingFiles}
-                      className={`bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 shadow-md hover:shadow-lg flex items-center gap-2 ${(parsedJobs.length > 0 || parsedSalesmen.length > 0) ? 'flex-1' : 'w-full'}`}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : isProcessingFiles ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Analyzing Files...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4" />
-                          Process and Assign Jobs
-                        </>
+            <div className="container mx-auto px-4">
+              <div className="flex justify-center">
+                <Card className="bg-gradient-to-br from-sky-100/50 to-blue-100/50 dark:from-sky-900/30 dark:to-blue-900/20 max-w-lg w-full shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Ready to Process?</CardTitle>
+                    <CardDescription>
+                      {isReadyToProcess 
+                        ? "Your files are ready! Click the button below to proceed."
+                        : "Upload your files to begin the assignment process."}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full ${parsedJobs.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                      <span>{parsedJobs.length > 0 ? `${parsedJobs.length} jobs detected` : 'No jobs detected'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full ${parsedSalesmen.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                      <span>{parsedSalesmen.length > 0 ? `${parsedSalesmen.length} salesmen detected` : 'No salesmen detected'}</span>
+                    </div>
+                    
+                    <div className="pt-4 flex gap-2">
+                      {(parsedJobs.length > 0 || parsedSalesmen.length > 0) && (
+                        <Button 
+                          variant="outline" 
+                          onClick={handleReset}
+                          className="flex-1 shadow-sm hover:shadow"
+                          disabled={isSubmitting || isProcessingFiles}
+                        >
+                          Reset Data
+                        </Button>
                       )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      <Button 
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || !isReadyToProcess || isProcessingFiles}
+                        className={`bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 shadow-md hover:shadow-lg flex items-center gap-2 ${(parsedJobs.length > 0 || parsedSalesmen.length > 0) ? 'flex-1' : 'w-full'}`}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : isProcessingFiles ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Analyzing Files...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Process and Assign Jobs
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
