@@ -1,10 +1,10 @@
 import { Job, Salesman } from '@/types/types';
 
-export const JOB_FILE_NAMES = ['job', 'jobs', 'task', 'tasks', 'service', 'services', 'delivery', 'deliveries', 'planificación'];
+export const JOB_FILE_NAMES = ['job', 'jobs', 'task', 'tasks', 'service', 'services', 'delivery', 'deliveries', 'planificación', 'planificacion'];
 export const SALESMAN_FILE_NAMES = ['salesman', 'salesmen', 'employee', 'employees', 'staff', 'technician', 'technicians', 'empleados', 'empleadas'];
 
 type ColumnMapping<T> = {
-  [K in keyof T]: string[];
+  [K in keyof T as K extends 'location' ? never : K]: string[];
 };
 
 export const ADDRESS_COLUMN_MAPPINGS = {
@@ -26,8 +26,8 @@ export const JOB_COLUMN_MAPPINGS: ColumnMapping<Job> = {
   client_name: ['client_name', 'client', 'customer', 'customer_name', 'customer_id', 'tarea'],
   date: ['date', 'job_date', 'jobdate', 'delivery_date', 'service_date', 'inicio'],
   duration_mins: ['duration_mins', 'duration', 'service_duration', 'time_required', 'minutes', 'mins', 'duración'],
-  entry_time: ['entry_time', 'entrytime', 'start_window', 'earliest_start', 'window_start', 'inicio', 'entrada'],
-  exit_time: ['exit_time', 'exittime', 'end_window', 'latest_end', 'window_end', 'fin', 'salida'],
+  entry_time: ['entry_time', 'entrytime', 'start_window', 'earliest_start', 'window_start'],
+  exit_time: ['exit_time', 'exittime', 'end_window', 'latest_end', 'window_end'],
   ...LOCATION_COLUMN_MAPPINGS
 };
 

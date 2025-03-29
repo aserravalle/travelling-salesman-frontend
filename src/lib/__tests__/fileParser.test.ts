@@ -27,10 +27,11 @@ describe('fileParser', () => {
   describe('parse', () => {
     describe('Parse from CSV', () => {
       it('should parse jobs_constrained.csv data correctly', async () => {
-        const filePath = path.join(process.cwd(), 'test', '01_jobs_constrained.csv');
+        const fileName = '01_jobs_constrained.csv';
+        const filePath = path.join(process.cwd(), 'test', fileName);
         const rawData = await readFileForTest(filePath);
 
-        const result = parseFile(rawData.data);
+        const result = parseFile(rawData.data, fileName);
         
         expect(result.type).toBe('job');
         expect(result.data).toHaveLength(51);
@@ -49,10 +50,11 @@ describe('fileParser', () => {
       });
 
       it('should parse salesmen.csv data correctly', async () => {
-        const filePath = path.join(process.cwd(), 'test', '01_salesmen.csv');
+        const fileName = '01_salesmen.csv';
+        const filePath = path.join(process.cwd(), 'test', fileName);
         const rawData = await readFileForTest(filePath);
 
-        const result = parseFile(rawData.data);
+        const result = parseFile(rawData.data, fileName);
         
         expect(result.type).toBe('salesman');
         expect(result.data).toHaveLength(10);
@@ -96,6 +98,8 @@ describe('fileParser', () => {
           longitude: -74.006
         });
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
       });
 
       it('should handle different location types', () => {
@@ -137,23 +141,29 @@ describe('fileParser', () => {
         let job = result.data[0] as Job;
         expect(job).toHaveProperty('job_id', '1');
         expect(job.location).toHaveProperty('address', '123 Main St, New York, NY 10001');
-        expect(job.location).not.toHaveProperty('latitude');
-        expect(job.location).not.toHaveProperty('longitude');
+        expect(job.location).toHaveProperty('latitude', undefined);
+        expect(job.location).toHaveProperty('longitude', undefined);
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
         
         job = result.data[1] as Job;
         expect(job).toHaveProperty('job_id', '1');
         expect(job.location).toHaveProperty('latitude', 40.7128);
         expect(job.location).toHaveProperty('longitude', -74.006);
-        expect(job.location).not.toHaveProperty('address');
+        expect(job.location).toHaveProperty('address', undefined);
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
         
         job = result.data[2] as Job;
         expect(job).toHaveProperty('job_id', '1');
         expect(job.location).toHaveProperty('address', '123 Main St, New York, NY 10001');
-        expect(job.location).not.toHaveProperty('latitude');
-        expect(job.location).not.toHaveProperty('longitude');
+        expect(job.location).toHaveProperty('latitude', undefined);
+        expect(job.location).toHaveProperty('longitude', undefined);
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
       });
     });
 
@@ -175,7 +185,7 @@ describe('fileParser', () => {
         expect(result.type).toBe('job');
         expect(result.data).toHaveLength(0);
         expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Row 1: No valid location data found in row 1');
+        expect(result.errors[0].message).toContain('Row 1: Row 1: Location must have either an address or valid coordinates');
       });
   
       it('should handle empty data', () => {
@@ -190,39 +200,22 @@ describe('fileParser', () => {
       it('should handle missing required job fields', () => {
         const mockData = [{
           job_id: '1',
-          date: '05-02-2025 09:00',
           latitude: '40.7128',
           longitude: '-74.006',
-          duration_mins: '60',
-          entry_time: '05-02-2025 09:00'
-          // Missing exit_time
+          // Missing entry_time, exit_time, duration_mins
         }];
   
         const result = parseFile(mockData);
         
-        expect(result.type).toBe('missingRequiredJobFields');
-        expect(result.data).toHaveLength(0);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toBe('Missing required Job fields: exit_time');
-        expect(result.errors[0].details.missingFields).toEqual(['exit_time']);
-      });
-
-      it('should handle multiple missing required job fields', () => {
-        const mockData = [{
-          job_id: '1',
-          date: '05-02-2025 09:00',
-          latitude: '40.7128',
-          longitude: '-74.006'
-          // Missing entry_time, exit_time, and duration_mins
-        }];
-  
-        const result = parseFile(mockData);
+        expect(result.type).toBe('job');
+        expect(result.data).toHaveLength(1);
+        expect(result.errors).toHaveLength(0);
         
-        expect(result.type).toBe('missingRequiredJobFields');
-        expect(result.data).toHaveLength(0);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toBe('Missing required Job fields: entry_time, exit_time, duration_mins');
-        expect(result.errors[0].details.missingFields).toEqual(['entry_time', 'exit_time', 'duration_mins']);
+        const job = result.data[0] as Job;
+        expect(job).toHaveProperty('duration_mins', 60);
+        let today = new Date().toISOString().split('T')[0];
+        expect(job).toHaveProperty('entry_time', `${today} 09:00:00`);
+        expect(job).toHaveProperty('exit_time', `${today} 18:00:00`);
       });
 
       it('should handle missing required salesman fields', () => {
@@ -235,11 +228,15 @@ describe('fileParser', () => {
   
         const result = parseFile(mockData);
         
-        expect(result.type).toBe('missingRequiredSalesmanFields');
-        expect(result.data).toHaveLength(0);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toBe('Missing required Salesman fields: start_time, end_time');
-        expect(result.errors[0].details.missingFields).toEqual(['start_time', 'end_time']);
+        expect(result.type).toBe('salesman');
+        expect(result.data).toHaveLength(1);
+        expect(result.errors).toHaveLength(0);
+        
+        const salesman = result.data[0] as Salesman;
+        expect(salesman).toHaveProperty('salesman_id', '1');
+        let today = new Date().toISOString().split('T')[0];
+        expect(salesman).toHaveProperty('start_time', `${today} 09:00:00`);
+        expect(salesman).toHaveProperty('end_time', `${today} 18:00:00`);
       });
 
       it('should handle missing location', () => {
@@ -254,10 +251,10 @@ describe('fileParser', () => {
   
         const result = parseFile(mockData);
         
-        expect(result.type).toBe('missingLocation');
+        expect(result.type).toBe('job');
         expect(result.data).toHaveLength(0);
         expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Missing location');
+        expect(result.errors[0].message).toContain('Row 1: Location must have either an address or valid coordinates');
       });
     });
 

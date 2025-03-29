@@ -67,7 +67,7 @@ const Index = () => {
         }
 
         // Parse the data
-        const parseResult = parseFile(readResult.data);
+        const parseResult = parseFile(readResult.data, file.name);
         
         if (parseResult.errors.length > 0) {
           parseResult.errors.forEach(error => {
@@ -297,6 +297,7 @@ const Index = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Job ID</TableHead>
+                              <TableHead>Client Name</TableHead>
                               <TableHead>Date</TableHead>
                               <TableHead>Coordinates</TableHead>
                               <TableHead>Address</TableHead>
@@ -309,6 +310,7 @@ const Index = () => {
                             {parsedJobs.map((job, index) => (
                               <TableRow key={index}>
                                 <TableCell>{job.job_id}</TableCell>
+                                <TableCell>{job.client_name || '-'}</TableCell>
                                 <TableCell>{formatDisplayDate(job.date)}</TableCell>
                                 <TableCell>
                                   {job.location.latitude && job.location.longitude 
@@ -358,6 +360,7 @@ const Index = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Salesman ID</TableHead>
+                              <TableHead>Salesman Name</TableHead>
                               <TableHead>Coordinates</TableHead>
                               <TableHead>Address</TableHead>
                               <TableHead>Start Time</TableHead>
@@ -368,6 +371,7 @@ const Index = () => {
                             {parsedSalesmen.map((salesman, index) => (
                               <TableRow key={index}>
                                 <TableCell>{salesman.salesman_id}</TableCell>
+                                <TableCell>{salesman.salesman_name || '-'}</TableCell>
                                 <TableCell>
                                   {salesman.location.latitude && salesman.location.longitude 
                                     ? `[${salesman.location.latitude.toFixed(4)}, ${salesman.location.longitude.toFixed(4)}]`

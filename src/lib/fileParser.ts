@@ -14,6 +14,12 @@ import {
   JOB_COLUMN_MAPPINGS,
   SALESMAN_COLUMN_MAPPINGS
 } from './columnMappings';
+import {
+  buildLocation,
+  handleMissingJobData,
+  handleMissingSalesmanData,
+  resetIdCounters
+} from './missingDataHandler';
 
 export interface ParseError {
   row?: number;
@@ -30,7 +36,7 @@ export interface ParseResult<T> {
 }
 
 // Parse raw data into typed objects
-export const parseFile = (rawData: any[], fileName?: string): ParseResult<Job | Salesman> => {
+export const parseFile = (rawData: any[], fileName: string = ''): ParseResult<Job | Salesman> => {
   console.log('[FileParser] Starting data parsing:', {
     rowCount: rawData.length,
     firstRow: rawData[0],
@@ -39,10 +45,13 @@ export const parseFile = (rawData: any[], fileName?: string): ParseResult<Job | 
 
   if (!rawData.length) { return noDataToParse() };
 
+  // Reset ID counters for the new file
+  resetIdCounters();
+
   const columns = Object.keys(rawData[0]);
   console.debug('[FileParser] Detected columns:', columns);
 
-  // First determine the dataset type using file name and basic checks
+  // Determine the dataset type using file name and basic checks
   let type = determineDatasetType(columns, fileName);
   
   if (type === 'unknown') { return unknownDataSetType() }
@@ -213,39 +222,25 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
       columnMatches
     });
 
-    const location = parseLocation(columnMatches, row, rowIndex);
-
-    const duration = parseInt(row[columnMatches.duration_mins]);
-    if (isNaN(duration)) {
-      console.error(`[FileParser] Invalid duration in row ${rowIndex + 1}:`, {
-        duration,
-        raw: row[columnMatches.duration_mins]
-      });
-      throw new Error('Invalid duration');
-    }
-
-    // Infer job_id if missing
-    const jobId = columnMatches.job_id ? 
-      String(row[columnMatches.job_id]) : 
-      String(nextJobId++);
+    // Handle missing data
+    const defaults = handleMissingJobData(row, columnMatches);
+    
+    // Build location from available data
+    const location = buildLocation(row, columnMatches);
 
     const job: Job = {
-      job_id: jobId,
+      job_id: defaults.job_id || String(row[columnMatches.job_id]),
       client_name: String(row[columnMatches.client_name]),
-      date: formatDateTime(row[columnMatches.date]),
+      date: defaults.date || formatDateTime(row[columnMatches.date]),
       location,
-      duration_mins: duration,
-      entry_time: formatDateTime(row[columnMatches.entry_time]),
-      exit_time: formatDateTime(row[columnMatches.exit_time])
+      duration_mins: defaults.duration_mins || parseInt(row[columnMatches.duration_mins]),
+      entry_time: defaults.entry_time || formatDateTime(row[columnMatches.entry_time]),
+      exit_time: defaults.exit_time || formatDateTime(row[columnMatches.exit_time])
     };
 
     validateRequiredFields(job, rowIndex);
     return job;
   } catch (error) {
-    console.error(`[FileParser] Error parsing job row ${rowIndex + 1}:`, {
-      row,
-      error
-    });
     throw new Error(`Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`);
   }
 }
@@ -259,28 +254,23 @@ function parseSalesmanRow(row: any, matchResult: MatchResult, rowIndex: number):
       columnMatches
     });
 
-    const location = parseLocation(columnMatches, row, rowIndex);
-
-    // Infer salesman_id if missing
-    const salesmanId = columnMatches.salesman_id ? 
-      String(row[columnMatches.salesman_id]) : 
-      String(nextSalesmanId++);
+    // Handle missing data
+    const defaults = handleMissingSalesmanData(row, columnMatches);
+    
+    // Build location from available data
+    const location = buildLocation(row, columnMatches);
 
     const salesman: Salesman = {
-      salesman_id: salesmanId,
+      salesman_id: defaults.salesman_id || String(row[columnMatches.salesman_id]),
       salesman_name: String(row[columnMatches.salesman_name]),
       location,
-      start_time: formatDateTime(row[columnMatches.start_time]),
-      end_time: formatDateTime(row[columnMatches.end_time])
+      start_time: defaults.start_time || formatDateTime(row[columnMatches.start_time]),
+      end_time: defaults.end_time || formatDateTime(row[columnMatches.end_time])
     };
 
     validateRequiredFields(salesman, rowIndex);
     return salesman;
   } catch (error) {
-    console.error(`[FileParser] Error parsing salesman row ${rowIndex + 1}:`, {
-      row,
-      error
-    });
     throw new Error(`Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`);
   }
 }
@@ -352,12 +342,25 @@ function validateRequiredFields<T>(obj: T, rowIndex: number): void {
   console.debug(`[FileParser] Validating fields for row ${rowIndex + 1}:`, obj);
 
   for (const [key, value] of Object.entries(obj)) {
+    // Special handling for location validation
+    if (key === 'location') {
+      const location = value as Location;
+      if (!location.address && (!location.latitude || !location.longitude)) {
+        console.error(`[FileParser] Invalid location in row ${rowIndex + 1}:`, {
+          location
+        });
+        throw new Error('Location must have either an address or valid coordinates');
+      }
+      continue;
+    }
+
+    // Regular field validation
     if (value === undefined || value === null || value === '') {
       console.error(`[FileParser] Missing required field in row ${rowIndex + 1}:`, {
         field: key,
         value
       });
-      throw new Error(`Row ${rowIndex + 1}: Missing required field ${key}`);
+      throw new Error(`Missing required field ${key}`);
     }
   }
 }

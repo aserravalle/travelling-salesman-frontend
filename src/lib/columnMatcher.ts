@@ -37,33 +37,31 @@ export function findBestColumnMatch(columns: string[], mappings: { [key: string]
 }
 
 // Determines dataset type based on file name and basic column checks
-export function determineDatasetType(columns: string[], fileName?: string): DatasetType {
-  // empty column list
-  if (columns.length === 0) { return 'unknown' }
+export function determineDatasetType(columns: string[], fileName: string): DatasetType {
+  // Normalize filename by removing diacritics and converting to lowercase
+  const normalizedFileName = fileName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
-  // Check file name if provided
-  if (fileName) {
-    const normalizedFileName = fileName.toLowerCase();
-    if (JOB_FILE_NAMES.some(name => normalizedFileName.includes(name))) {
-      return 'job';
-    }
-    if (SALESMAN_FILE_NAMES.some(name => normalizedFileName.includes(name))) {
-      return 'salesman';
-    }
+  if (JOB_FILE_NAMES.some(name => normalizedFileName.includes(name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))) {
+    console.log('[ColumnMatcher] Job file name detected', fileName);
+    return 'job';
+  }
+  if (SALESMAN_FILE_NAMES.some(name => normalizedFileName.includes(name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()))) {
+    console.log('[ColumnMatcher] Salesman file name detected', fileName);
+    return 'salesman';
   }
 
-  // Cant be missing location
-  const locationMatches = findBestColumnMatch(columns, LOCATION_COLUMN_MAPPINGS);
-  const hasAddress = !!locationMatches.address;
-  const hasCoordinates = !!(locationMatches.latitude && locationMatches.longitude);
-  if (!(hasAddress || hasCoordinates)) { return 'missingLocation' }
-
-  // If still unknown, check by column matching
+  // If we can't determine by filename, check by column matching
   return determineDatasetTypeByColumnMatching(columns);
 }
 
 // Determines dataset type by checking required fields and IDs
 export function determineDatasetTypeByColumnMatching(columns: string[]): DatasetType {
+  // empty column list
+  if (columns.length === 0) { return 'unknown' }
+  
   const matches = findBestColumnMatch(columns, { 
     ...JOB_COLUMN_MAPPINGS,
     ...SALESMAN_COLUMN_MAPPINGS 
@@ -72,23 +70,22 @@ export function determineDatasetTypeByColumnMatching(columns: string[]): Dataset
   // If missing both types of required fields, it's unknown
   const hasSalesmanRequiredFields = !!(matches.start_time && matches.end_time);
   const hasJobRequiredFields = !!(matches.entry_time && matches.exit_time && matches.duration_mins);
-  if (!hasSalesmanRequiredFields && !hasJobRequiredFields) { return 'unknown' }
 
   // If we have the required fields, return the dataset type
-  if (hasJobRequiredFields && !hasSalesmanRequiredFields) return 'job';
-  if (!hasJobRequiredFields && hasSalesmanRequiredFields) return 'salesman';
+  if (hasJobRequiredFields && !hasSalesmanRequiredFields) {
+    console.log('[ColumnMatcher] Job columns detected');
+    return 'job';
+  }
+  if (!hasJobRequiredFields && hasSalesmanRequiredFields) {
+    console.log('[ColumnMatcher] Salesman columns detected');
+    return 'salesman';
+  }
 
   // If we have both fields, use ID
   const hasJobId = !!matches.job_id;
   const hasSalesmanId = !!matches.salesman_id;
-  if (hasJobId) {
-    if (hasJobRequiredFields) return 'job';
-    else return 'missingRequiredJobFields';
-  }
-  if (hasSalesmanId) {
-    if (hasSalesmanRequiredFields) return 'salesman';
-    else return 'missingRequiredSalesmanFields';
-  }
+  if (hasJobId && !hasSalesmanId) return 'job';
+  if (!hasJobId && hasSalesmanId) return 'salesman';
 
   // else unknown
   return 'unknown';

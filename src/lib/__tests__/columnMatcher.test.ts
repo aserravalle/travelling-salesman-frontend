@@ -106,8 +106,6 @@ describe('columnMatcher', () => {
         date: 'Inicio',
         address: 'Dirección',
         duration_mins: 'Duración',
-        entry_time: 'Inicio',
-        exit_time: 'Fin'
       });
     });
 
@@ -126,17 +124,19 @@ describe('columnMatcher', () => {
   });
 
   describe('Matching dataset type', () => {
-    it('should handle Spanish salesman data set types', () => {
-      // ID	Nombre completo	Tipo	Departamento	Dirección	Población	Provincia	País	Fecha creación
-      let columns = ['ID', 'Nombre completo', 'Dirección'];
-      let result = determineDatasetType(columns, "REPASAT - Panel - Planificación (3).xlsx")
+    it('should handle Spanish job data set types dataset name', () => {
+      let result = determineDatasetType([], "04_planificación_20250328.csv")
+      expect(result).toBe('job');
+
+      result = determineDatasetType([], "REPASAT - Panel - Planificación (3).xlsx")
       expect(result).toBe('job');
     });
 
-    it('should handle Spanish job data set types', () => {
-      // Es.	Inicio	Fin	Duración	Tarea	Tipo	CP	Descripción	Provincia	Dirección	Población	País
-      let columns = ['Inicio', 'Fin', 'Duración', 'Tarea', 'Tipo', 'CP', 'Descripción', 'Dirección'];
-      let result = determineDatasetType(columns, "REPASAT - Admin - Empleados.xlsx")
+    it('should handle Spanish salesman data set types dataset name', () => {
+      let result = determineDatasetType([], "04_empleados_20250328.csv")
+      expect(result).toBe('salesman');
+
+      result = determineDatasetType([], "REPASAT - Admin - Empleados.xlsx")
       expect(result).toBe('salesman');
     });
 
