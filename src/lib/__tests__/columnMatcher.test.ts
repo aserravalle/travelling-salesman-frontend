@@ -105,6 +105,7 @@ describe('columnMatcher', () => {
         client_name: 'Tarea',
         date: 'Inicio',
         address: 'Dirección',
+        "description": "Descripción",
         duration_mins: 'Duración',
       });
     });
