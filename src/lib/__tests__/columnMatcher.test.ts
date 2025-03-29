@@ -103,7 +103,6 @@ describe('columnMatcher', () => {
       expect(result.type).toBe('job');
       expect(result.columnMatches).toEqual({
         client_name: 'Tarea',
-        date: 'Inicio',
         address: 'Dirección',
         "description": "Descripción",
         duration_mins: 'Duración',

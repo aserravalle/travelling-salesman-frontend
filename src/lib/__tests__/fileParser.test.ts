@@ -498,10 +498,10 @@ describe('Duration Parsing', () => {
   });
 
   it('should handle null duration', () => {
-    expect(() => parseDurationValue(null)).toThrow('Invalid duration format');
+    expect(() => parseDurationValue(null)).toThrow('Duration value is null or undefined');
   });
 
   it('should handle undefined duration', () => {
-    expect(() => parseDurationValue(undefined)).toThrow('Invalid duration format');
+    expect(() => parseDurationValue(undefined)).toThrow('Duration value is null or undefined');
   });
 });

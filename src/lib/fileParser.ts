@@ -378,6 +378,10 @@ function validateRequiredFields<T>(obj: T, rowIndex: number): void {
 
 // Export parseDuration for testing
 export function parseDurationValue(durationValue: any): number {
+  if (!durationValue) {
+    throw new Error(`Duration value is null or undefined`);
+  }
+  
   // If it's already a number, return it
   if (typeof durationValue === 'number') {
     return durationValue;
