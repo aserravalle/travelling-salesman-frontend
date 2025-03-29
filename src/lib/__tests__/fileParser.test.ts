@@ -27,7 +27,7 @@ describe('fileParser', () => {
   describe('parse', () => {
     describe('Parse from CSV', () => {
       it('should parse jobs_constrained.csv data correctly', async () => {
-        const filePath = path.join(process.cwd(), 'test', '03_jobs_constrained.csv');
+        const filePath = path.join(process.cwd(), 'test', '01_jobs_constrained.csv');
         const rawData = await readFileForTest(filePath);
 
         const result = parseFile(rawData.data);

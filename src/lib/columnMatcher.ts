@@ -55,9 +55,8 @@ export function determineDatasetType(columns: string[], fileName?: string): Data
   // Cant be missing location
   const locationMatches = findBestColumnMatch(columns, LOCATION_COLUMN_MAPPINGS);
   const hasAddress = !!locationMatches.address;
-  const hasLatLong = !!(locationMatches.latitude && locationMatches.longitude);
-  const hasLocation = hasAddress || hasLatLong;
-  if (!hasLocation) { return 'missingLocation' }
+  const hasCoordinates = !!(locationMatches.latitude && locationMatches.longitude);
+  if (!(hasAddress || hasCoordinates)) { return 'missingLocation' }
 
   // If still unknown, check by column matching
   return determineDatasetTypeByColumnMatching(columns);

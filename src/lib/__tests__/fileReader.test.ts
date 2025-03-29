@@ -130,7 +130,7 @@ describe('fileReader', () => {
     });
   
     it('should read jobs_constrained.csv correctly', async () => {
-      const filePath = path.join(process.cwd(), 'test', '03_jobs_constrained.csv');
+      const filePath = path.join(process.cwd(), 'test', '01_jobs_constrained.csv');
       const result = await readFileForTest(filePath);
       
       expect(result.data).toBeDefined();
