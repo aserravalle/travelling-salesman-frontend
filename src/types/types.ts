@@ -1,28 +1,34 @@
+export type Location = 
+  | { latitude: number; longitude: number; address?: string } // both lat & long required, address optional
+  | { address: string; latitude?: never; longitude?: never } // only address, no lat/long
 
-export interface Location {
-  latitude: number;
-  longitude: number;
-}
 
 export interface Job {
   job_id: string;
   date: string;
-  location: [number, number];
+  location: Location;
   duration_mins: number;
   entry_time: string;
   exit_time: string;
+
+  client_name?: string;
 }
 
 export interface Salesman {
   salesman_id: string;
-  home_location: [number, number];
+  location: Location;
   start_time: string;
   end_time: string;
+
+  salesman_name?: string;
 }
 
 export interface AssignedJob extends Job {
   salesman_id: string | null;
   start_time: string | null;
+
+  client_name?: string;
+  salesman_name?: string;
 }
 
 export interface RosterRequest {
@@ -32,15 +38,15 @@ export interface RosterRequest {
 
 export interface RosterResponse {
   jobs: Record<string, AssignedJob[]>;
-  unassigned_jobs: AssignedJob[];
+  unassigned_jobs: Job[];
   message: string;
 }
 
+// More like assigned job 
 export interface JobTableRow {
   job_id: string;
   date: string;
-  latitude: number;
-  longitude: number;
+  location: Location;
   duration_mins: number;
   entry_time: string;
   exit_time: string;
@@ -48,11 +54,6 @@ export interface JobTableRow {
   salesman_id: string | null;
   start_time: string | null;
   
-  name?: string;
-  customer?: string;
-  address?: string;
-  suburb?: string;
-  postcode?: string;
-  city?: string;
-  country?: string;
+  salesman_name?: string;
+  client_name?: string;
 }

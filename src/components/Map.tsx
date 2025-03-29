@@ -1,10 +1,9 @@
-
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Route } from 'lucide-react';
-import { JobTableRow } from '@/types';
+import { JobTableRow } from '@/types/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
@@ -111,8 +110,8 @@ const Map = ({
     
     // Add job locations to bounds - only for visible/filtered data
     displayData.forEach(job => {
-      if (job.longitude && job.latitude) {
-        bounds.extend([job.longitude, job.latitude]);
+      if (job.location.latitude && job.location.longitude) {
+        bounds.extend([job.location.longitude, job.location.latitude]);
       }
     });
     
@@ -165,7 +164,7 @@ const Map = ({
       
       // Add markers for each job - only for visible/filtered data
       displayData.forEach(job => {
-        if (!job.longitude || !job.latitude) return;
+        if (!job.location.latitude || !job.location.longitude) return;
         
         addMarker(job);
       });
@@ -188,7 +187,7 @@ const Map = ({
   };
   
   const addMarker = (job: JobTableRow) => {
-    if (!map.current || !job.longitude || !job.latitude) return;
+    if (!map.current || !job.location.latitude || !job.location.longitude) return;
     
     const isAssigned = job.assignment_status === 'Assigned';
     
@@ -230,7 +229,7 @@ const Map = ({
     
     // Add marker to map
     const marker = new mapboxgl.Marker(el)
-      .setLngLat([job.longitude, job.latitude])
+      .setLngLat([job.location.longitude, job.location.latitude])
       .setPopup(popup)
       .addTo(map.current);
     
@@ -273,7 +272,7 @@ const Map = ({
       });
       
       // Create coordinates array for the route
-      const coordinates = sortedJobs.map(job => [job.longitude!, job.latitude!]);
+      const coordinates = sortedJobs.map(job => [job.location.longitude!, job.location.latitude!]);
       
       // Add route feature
       salesmanRoutes.push({

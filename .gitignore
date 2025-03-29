@@ -23,3 +23,6 @@ dist-ssr
 *.sw?
 .env
 .vite
+
+# Test files
+test/sensitive_data/*

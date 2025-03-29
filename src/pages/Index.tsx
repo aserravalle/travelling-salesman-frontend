@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { parseCSV, parseExcel, processJobData, processSalesmanData, convertResponseToTableRows, exportTableToCSV, downloadCSV, formatDisplayDate, formatDisplayTime } from '@/lib/fileParser';
+import { parseFile } from '@/lib/fileParser';
+import { convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
+import { readFile } from '@/lib/fileReader';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
 import { assignJobs } from '@/services/api';
-import { fadeIn, staggerContainer } from '@/lib/motion';
-import { Job, Salesman, RosterRequest, JobTableRow } from '@/types';
-import { ArrowRight, Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
+import { fadeIn } from '@/lib/motion';
+import { Job, Salesman, JobTableRow, RosterRequest } from '@/types/types';
+import { Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import Map from '@/components/Map';
 import StatusBanner from '@/components/StatusBanner';
 import {
@@ -48,81 +51,63 @@ const Index = () => {
 
     try {
       for (const file of files) {
-        let rawData;
-        if (file.name.endsWith('.csv')) {
-          rawData = await parseCSV(file);
-        } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-          rawData = await parseExcel(file);
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Invalid file format",
-            description: `File ${file.name} is not a CSV or Excel file`,
-          });
-          continue;
-        }
-
-        if (!rawData || rawData.length === 0) {
-          toast({
-            variant: "destructive",
-            title: "Empty file",
-            description: `File ${file.name} contains no data`,
-          });
-          continue;
-        }
-
-        const firstRow = rawData[0];
-        const hasJobFields = 'job_id' in firstRow && 'duration_mins' in firstRow;
-        const hasSalesmanFields = 'salesman_id' in firstRow && 'home_location' in firstRow || 
-                                ('salesman_id' in firstRow && ('home_latitude' in firstRow || 'home_longitude' in firstRow));
+        // Read the file
+        const readResult = await readFile(file);
         
-        if (hasJobFields) {
-          const processedJobs = processJobData(rawData);
-          setParsedJobs(processedJobs);
-          toast({
-            title: "Jobs file processed",
-            description: `Successfully parsed ${processedJobs.length} jobs from ${file.name}`,
-          });
-        } else if (hasSalesmanFields) {
-          const processedSalesmen = processSalesmanData(rawData);
-          setParsedSalesmen(processedSalesmen);
-          toast({
-            title: "Salesmen file processed",
-            description: `Successfully parsed ${processedSalesmen.length} salesmen from ${file.name}`,
-          });
-        } else {
-          const columnSet = new Set(Object.keys(firstRow).map(key => key.toLowerCase()));
-          
-          const jobKeywords = ['job', 'task', 'assignment', 'duration', 'entry', 'exit'];
-          const salesmanKeywords = ['salesman', 'sales', 'employee', 'staff', 'person', 'home'];
-          
-          const jobScore = jobKeywords.filter(keyword => 
-            [...columnSet].some(column => column.includes(keyword))
-          ).length;
-          
-          const salesmanScore = salesmanKeywords.filter(keyword => 
-            [...columnSet].some(column => column.includes(keyword))
-          ).length;
-          
-          if (jobScore > salesmanScore) {
-            const processedJobs = processJobData(rawData);
-            setParsedJobs(processedJobs);
-            toast({
-              title: "Jobs file detected",
-              description: `Identified and parsed ${processedJobs.length} jobs from ${file.name}`,
-            });
-          } else if (salesmanScore > jobScore) {
-            const processedSalesmen = processSalesmanData(rawData);
-            setParsedSalesmen(processedSalesmen);
-            toast({
-              title: "Salesmen file detected",
-              description: `Identified and parsed ${processedSalesmen.length} salesmen from ${file.name}`,
-            });
-          } else {
+        if (readResult.errors.length > 0) {
+          readResult.errors.forEach(error => {
             toast({
               variant: "destructive",
-              title: "Unknown file format",
-              description: `Could not determine if ${file.name} contains jobs or salesmen data`,
+              title: `Error reading ${file.name}`,
+              description: error.message,
+            });
+          });
+          
+          if (readResult.data.length === 0) continue;
+        }
+
+        // Parse the data
+        const parseResult = parseFile(readResult.data);
+        
+        if (parseResult.errors.length > 0) {
+          parseResult.errors.forEach(error => {
+            toast({
+              variant: "destructive",
+              title: `Error parsing ${file.name}`,
+              description: error.message,
+            });
+          });
+        }
+
+        if (parseResult.type === 'unknown') {
+          toast({
+            variant: "destructive",
+            title: "Unknown data format",
+            description: `Could not determine if ${file.name} contains jobs or salesmen data`,
+          });
+          continue;
+        }
+
+        if (parseResult.skippedRows > 0) {
+          toast({
+            variant: "default",
+            title: "Skipped rows",
+            description: `${parseResult.skippedRows} row${parseResult.skippedRows > 1 ? 's were' : ' was'} skipped in ${file.name}`,
+          });
+        }
+
+        if (parseResult.data.length > 0) {
+          if (parseResult.type === 'job') {
+            setParsedJobs(parseResult.data as Job[]);
+            toast({
+              title: "Jobs file processed",
+              description: `Successfully parsed ${parseResult.data.length} jobs from ${file.name}`,
+            });
+          } else if (parseResult.type === 'salesman') {
+            setParsedSalesmen(parseResult.data as Salesman[]);
+            toast({
+              title: "Salesmen file processed",
+              description: `Successfully parsed ${parseResult.data.length} salesmen from ${file.name}`,
             });
           }
         }
@@ -132,7 +117,7 @@ const Index = () => {
       toast({
         variant: "destructive",
         title: "Error processing files",
-        description: "An error occurred while processing your files",
+        description: "An unexpected error occurred while processing your files",
       });
     } finally {
       setIsProcessingFiles(false);
@@ -167,10 +152,9 @@ const Index = () => {
       
       setResponseMessage(response.message);
       
-      // TODO: Update the response messages to correspond with the status
-      if (response.message.includes('Error') || response.message.includes('error')) {
+      if (response.message.toLowerCase().includes('error')) {
         setResponseStatus('error');
-      } else if (response.message.includes('unassigned')) {
+      } else if (response.message.toLowerCase().includes('unassigned')) {
         setResponseStatus('warning');
       } else {
         setResponseStatus('success');
@@ -314,7 +298,8 @@ const Index = () => {
                             <TableRow>
                               <TableHead>Job ID</TableHead>
                               <TableHead>Date</TableHead>
-                              <TableHead>Location</TableHead>
+                              <TableHead>Coordinates</TableHead>
+                              <TableHead>Address</TableHead>
                               <TableHead>Duration</TableHead>
                               <TableHead>Entry Time</TableHead>
                               <TableHead>Exit Time</TableHead>
@@ -325,7 +310,13 @@ const Index = () => {
                               <TableRow key={index}>
                                 <TableCell>{job.job_id}</TableCell>
                                 <TableCell>{formatDisplayDate(job.date)}</TableCell>
-                                <TableCell>[{job.location[0].toFixed(4)}, {job.location[1].toFixed(4)}]</TableCell>
+                                <TableCell>
+                                  {job.location.latitude && job.location.longitude 
+                                    ? `[${job.location.latitude.toFixed(4)}, ${job.location.longitude.toFixed(4)}]`
+                                    : '-'
+                                  }
+                                </TableCell>
+                                <TableCell>{job.location.address || '-'}</TableCell>
                                 <TableCell>{job.duration_mins} mins</TableCell>
                                 <TableCell>{formatDisplayTime(job.entry_time)}</TableCell>
                                 <TableCell>{formatDisplayTime(job.exit_time)}</TableCell>
@@ -367,7 +358,8 @@ const Index = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Salesman ID</TableHead>
-                              <TableHead>Home Location</TableHead>
+                              <TableHead>Coordinates</TableHead>
+                              <TableHead>Address</TableHead>
                               <TableHead>Start Time</TableHead>
                               <TableHead>End Time</TableHead>
                             </TableRow>
@@ -376,7 +368,13 @@ const Index = () => {
                             {parsedSalesmen.map((salesman, index) => (
                               <TableRow key={index}>
                                 <TableCell>{salesman.salesman_id}</TableCell>
-                                <TableCell>[{salesman.home_location[0].toFixed(4)}, {salesman.home_location[1].toFixed(4)}]</TableCell>
+                                <TableCell>
+                                  {salesman.location.latitude && salesman.location.longitude 
+                                    ? `[${salesman.location.latitude.toFixed(4)}, ${salesman.location.longitude.toFixed(4)}]`
+                                    : '-'
+                                  }
+                                </TableCell>
+                                <TableCell>{salesman.location.address || '-'}</TableCell>
                                 <TableCell>{formatDisplayTime(salesman.start_time)}</TableCell>
                                 <TableCell>{formatDisplayTime(salesman.end_time)}</TableCell>
                               </TableRow>
