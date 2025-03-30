@@ -46,7 +46,7 @@ interface DataTableProps {
 }
 
 export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTableProps) => {
-  const [sortBy, setSortBy] = useState<string>('job_id');
+  const [sortBy, setSortBy] = useState<string>('start_time');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -54,19 +54,18 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
 
   // List of columns to display
   const columns: Column[] = [
-    // Required columns
     { key: 'job_id', label: 'Job ID' },
     { key: 'client_name', label: 'Client' },
-    { key: 'date', label: 'Date' },
-    { key: 'coordinates', label: 'Coordinates' },
     { key: 'address', label: 'Address' },
+    { key: 'start_time', label: 'Start Time' },
     { key: 'duration_mins', label: 'Duration (mins)' },
-    { key: 'entry_time', label: 'Entry Time' },
-    { key: 'exit_time', label: 'Exit Time' },
     { key: 'assignment_status', label: 'Status' },
     { key: 'salesman_id', label: 'Salesman ID' },
     { key: 'salesman_name', label: 'Salesman' },
-    { key: 'start_time', label: 'Start Time' },
+    { key: 'entry_time', label: 'Entry Time' },
+    { key: 'exit_time', label: 'Exit Time' },
+    { key: 'coordinates', label: 'Coordinates' },
+    { key: 'date', label: 'Date' },
   ];
 
   // Get unique salesman IDs for filtering

@@ -20,6 +20,6 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: [process.env.VITE_ALLOWED_HOSTS || 'localhost']
+    allowedHosts: [process.env.VITE_ALLOWED_HOSTS || 'localhost:8080']
   }
 });

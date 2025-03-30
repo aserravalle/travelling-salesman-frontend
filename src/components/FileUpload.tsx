@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,7 +88,7 @@ export const FileUpload = ({
       <CardContent>
         <div
           className={cn(
-            "border-2 border-dashed rounded-lg p-10 cursor-pointer text-center transition-colors",
+            "border-2 border-dashed rounded-lg p-6 cursor-pointer text-center transition-colors",
             isDragging ? "border-primary bg-secondary/20" : "border-border hover:border-primary/50",
             files.length > 0 ? "bg-secondary/10" : ""
           )}

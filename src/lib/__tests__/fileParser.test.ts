@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parseFile } from '@/lib/fileParser';
+import { parseFile, parseTimesFromDescription, parseDurationValue } from '@/lib/fileParser';
 import { Job, Salesman } from '@/types/types';
 import { readFileForTest } from './testHelpers';
 import path from 'path';
@@ -27,10 +27,11 @@ describe('fileParser', () => {
   describe('parse', () => {
     describe('Parse from CSV', () => {
       it('should parse jobs_constrained.csv data correctly', async () => {
-        const filePath = path.join(process.cwd(), 'test', '03_jobs_constrained.csv');
+        const fileName = '01_jobs_constrained.csv';
+        const filePath = path.join(process.cwd(), 'test', fileName);
         const rawData = await readFileForTest(filePath);
 
-        const result = parseFile(rawData.data);
+        const result = parseFile(rawData.data, fileName);
         
         expect(result.type).toBe('job');
         expect(result.data).toHaveLength(51);
@@ -49,10 +50,11 @@ describe('fileParser', () => {
       });
 
       it('should parse salesmen.csv data correctly', async () => {
-        const filePath = path.join(process.cwd(), 'test', '01_salesmen.csv');
+        const fileName = '01_salesmen.csv';
+        const filePath = path.join(process.cwd(), 'test', fileName);
         const rawData = await readFileForTest(filePath);
 
-        const result = parseFile(rawData.data);
+        const result = parseFile(rawData.data, fileName);
         
         expect(result.type).toBe('salesman');
         expect(result.data).toHaveLength(10);
@@ -96,6 +98,8 @@ describe('fileParser', () => {
           longitude: -74.006
         });
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
       });
 
       it('should handle different location types', () => {
@@ -137,23 +141,29 @@ describe('fileParser', () => {
         let job = result.data[0] as Job;
         expect(job).toHaveProperty('job_id', '1');
         expect(job.location).toHaveProperty('address', '123 Main St, New York, NY 10001');
-        expect(job.location).not.toHaveProperty('latitude');
-        expect(job.location).not.toHaveProperty('longitude');
+        expect(job.location).toHaveProperty('latitude', undefined);
+        expect(job.location).toHaveProperty('longitude', undefined);
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
         
         job = result.data[1] as Job;
         expect(job).toHaveProperty('job_id', '1');
         expect(job.location).toHaveProperty('latitude', 40.7128);
         expect(job.location).toHaveProperty('longitude', -74.006);
-        expect(job.location).not.toHaveProperty('address');
+        expect(job.location).toHaveProperty('address', undefined);
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
         
         job = result.data[2] as Job;
         expect(job).toHaveProperty('job_id', '1');
         expect(job.location).toHaveProperty('address', '123 Main St, New York, NY 10001');
-        expect(job.location).not.toHaveProperty('latitude');
-        expect(job.location).not.toHaveProperty('longitude');
+        expect(job.location).toHaveProperty('latitude', undefined);
+        expect(job.location).toHaveProperty('longitude', undefined);
         expect(job).toHaveProperty('duration_mins', 60);
+        expect(job).toHaveProperty('entry_time', '2025-02-05 09:00:00');
+        expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
       });
     });
 
@@ -175,7 +185,7 @@ describe('fileParser', () => {
         expect(result.type).toBe('job');
         expect(result.data).toHaveLength(0);
         expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Row 1: No valid location data found in row 1');
+        expect(result.errors[0].message).toContain('Row 1: Location must have either an address or valid coordinates');
       });
   
       it('should handle empty data', () => {
@@ -190,39 +200,22 @@ describe('fileParser', () => {
       it('should handle missing required job fields', () => {
         const mockData = [{
           job_id: '1',
-          date: '05-02-2025 09:00',
           latitude: '40.7128',
           longitude: '-74.006',
-          duration_mins: '60',
-          entry_time: '05-02-2025 09:00'
-          // Missing exit_time
+          // Missing entry_time, exit_time, duration_mins
         }];
   
         const result = parseFile(mockData);
         
-        expect(result.type).toBe('missingRequiredJobFields');
-        expect(result.data).toHaveLength(0);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toBe('Missing required Job fields: exit_time');
-        expect(result.errors[0].details.missingFields).toEqual(['exit_time']);
-      });
-
-      it('should handle multiple missing required job fields', () => {
-        const mockData = [{
-          job_id: '1',
-          date: '05-02-2025 09:00',
-          latitude: '40.7128',
-          longitude: '-74.006'
-          // Missing entry_time, exit_time, and duration_mins
-        }];
-  
-        const result = parseFile(mockData);
+        expect(result.type).toBe('job');
+        expect(result.data).toHaveLength(1);
+        expect(result.errors).toHaveLength(0);
         
-        expect(result.type).toBe('missingRequiredJobFields');
-        expect(result.data).toHaveLength(0);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toBe('Missing required Job fields: entry_time, exit_time, duration_mins');
-        expect(result.errors[0].details.missingFields).toEqual(['entry_time', 'exit_time', 'duration_mins']);
+        const job = result.data[0] as Job;
+        expect(job).toHaveProperty('duration_mins', 60);
+        let today = new Date().toISOString().split('T')[0];
+        expect(job).toHaveProperty('entry_time', `${today} 09:00:00`);
+        expect(job).toHaveProperty('exit_time', `${today} 23:00:00`);
       });
 
       it('should handle missing required salesman fields', () => {
@@ -235,11 +228,15 @@ describe('fileParser', () => {
   
         const result = parseFile(mockData);
         
-        expect(result.type).toBe('missingRequiredSalesmanFields');
-        expect(result.data).toHaveLength(0);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toBe('Missing required Salesman fields: start_time, end_time');
-        expect(result.errors[0].details.missingFields).toEqual(['start_time', 'end_time']);
+        expect(result.type).toBe('salesman');
+        expect(result.data).toHaveLength(1);
+        expect(result.errors).toHaveLength(0);
+        
+        const salesman = result.data[0] as Salesman;
+        expect(salesman).toHaveProperty('salesman_id', '1');
+        let today = new Date().toISOString().split('T')[0];
+        expect(salesman).toHaveProperty('start_time', `${today} 09:00:00`);
+        expect(salesman).toHaveProperty('end_time', `${today} 18:00:00`);
       });
 
       it('should handle missing location', () => {
@@ -254,12 +251,257 @@ describe('fileParser', () => {
   
         const result = parseFile(mockData);
         
-        expect(result.type).toBe('missingLocation');
+        expect(result.type).toBe('job');
         expect(result.data).toHaveLength(0);
         expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Missing location');
+        expect(result.errors[0].message).toContain('Row 1: Location must have either an address or valid coordinates');
       });
     });
 
+  });
+});
+
+describe('parseTimesFromDescription', () => {
+  it('should parse entry and exit times from description', () => {
+    const description = 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 08:40     Entrada:  Fecha: 28-03-2025 14:00  Huéspedes:  2  Opciones:  -  Indicaciones:';
+    
+    const result = parseTimesFromDescription(description);
+    
+    expect(result.entry_time).toBe('28-03-2025 08:40');
+    expect(result.exit_time).toBe('28-03-2025 14:00');
+  });
+
+  it('should parse entry and exit times from description with tomorrows exit time', () => {
+    const description = 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 08:30     Entrada:  Fecha: 28-03-2025 00:15  Huéspedes:  2  Opciones:  -  Indicaciones:';
+    
+    const result = parseTimesFromDescription(description);
+    
+    expect(result.entry_time).toBe('28-03-2025 08:30');
+    expect(result.exit_time).toBe('28-03-2025 00:15'); // TODO parseTimesFromDescription should set this to midnight
+  });
+
+  it('should handle description with only exit time', () => {
+    const description = 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 11:00     Entrada:  Fecha: -  Huéspedes:  -  Opciones:  -  Indicaciones:  LARGA ESTANCIA 25 NOCHES';
+    
+    const result = parseTimesFromDescription(description);
+    const today = new Date().toISOString().split('T')[0];
+    
+    expect(result.entry_time).toBe(`${today} 11:00`);
+    expect(result.exit_time).toBeUndefined();
+  });
+
+  it('should handle description with only entry time', () => {
+    const description = 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: -     Entrada:  Fecha: 28-03-2025 14:00  Huéspedes:  2  Opciones:  -  Indicaciones:';
+    
+    const result = parseTimesFromDescription(description);
+    
+    expect(result.entry_time).toBeUndefined();
+    expect(result.exit_time).toBe('28-03-2025 14:00');
+  });
+
+  it('should handle description with no time information', () => {
+    const description = 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: -     Entrada:  Fecha: -  Huéspedes:  2  Opciones:  -  Indicaciones:';
+    
+    const result = parseTimesFromDescription(description);
+    
+    expect(result.entry_time).toBeUndefined();
+    expect(result.exit_time).toBeUndefined();
+  });
+
+  it('should handle empty description', () => {
+    const result = parseTimesFromDescription('');
+    
+    expect(result.entry_time).toBeUndefined();
+    expect(result.exit_time).toBeUndefined();
+  });
+});
+
+describe('parseJobRow with description-based times', () => {
+  it('should parse times from description when regular columns are missing', () => {
+    const mockData = [{
+      job_id: '1',
+      date: '05-02-2025 09:00',
+      address: '123 Main St, New York, NY 10001',
+      latitude: '40.7128',
+      longitude: '-74.006',
+      duration_mins: '60',
+      description: 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 08:40     Entrada:  Fecha: 05-02-2025 14:00  Huéspedes:  2  Opciones:  -  Indicaciones:'
+    }];
+
+    const result = parseFile(mockData);
+    
+    expect(result.type).toBe('job');
+    expect(result.data).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
+
+    const job = result.data[0] as Job;
+    expect(job).toHaveProperty('entry_time', '2025-02-05 08:40:00');
+    expect(job).toHaveProperty('exit_time', '2025-02-05 14:00:00');
+  });
+
+  it('should prefer description times over regular columns when both exist', () => {
+    const mockData = [{
+      job_id: '1',
+      date: '05-02-2025 09:00',
+      address: '123 Main St, New York, NY 10001',
+      latitude: '40.7128',
+      longitude: '-74.006',
+      duration_mins: '60',
+      entry_time: '05-02-2025 09:00',
+      exit_time: '05-02-2025 12:00',
+      description: 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 08:40     Entrada:  Fecha: 05-02-2025 14:00  Huéspedes:  2  Opciones:  -  Indicaciones:'
+    }];
+
+    const result = parseFile(mockData);
+    
+    expect(result.type).toBe('job');
+    expect(result.data).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
+
+    const job = result.data[0] as Job;
+    expect(job).toHaveProperty('entry_time', '2025-02-05 08:40:00');
+    expect(job).toHaveProperty('exit_time', '2025-02-05 14:00:00');
+  });
+
+  it('should handle description with only exit time', () => {
+    const mockData = [{
+      job_id: '1',
+      date: '05-02-2025 09:00',
+      address: '123 Main St, New York, NY 10001',
+      latitude: '40.7128',
+      longitude: '-74.006',
+      duration_mins: '60',
+      description: 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 11:00     Entrada:  Fecha: -  Huéspedes:  -  Opciones:  -  Indicaciones:  LARGA ESTANCIA 25 NOCHES'
+    }];
+
+    const result = parseFile(mockData);
+    
+    expect(result.type).toBe('job');
+    expect(result.data).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
+
+    const job = result.data[0] as Job;
+    const today = new Date().toISOString().split('T')[0];
+    expect(job).toHaveProperty('entry_time', `2025-02-05 11:00:00`); // Uses default from handleMissingJobData
+    expect(job).toHaveProperty('exit_time', `2025-02-05 23:00:00`);
+  });
+
+  it('should handle description with only entry time', () => {
+    const mockData = [{
+      job_id: '1',
+      date: '05-02-2025 09:00',
+      address: '123 Main St, New York, NY 10001',
+      latitude: '40.7128',
+      longitude: '-74.006',
+      duration_mins: '60',
+      description: 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: -     Entrada:  Fecha: 28-03-2025 14:00  Huéspedes:  2  Opciones:  -  Indicaciones:'
+    }];
+
+    const result = parseFile(mockData);
+    
+    expect(result.type).toBe('job');
+    expect(result.data).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
+
+    const job = result.data[0] as Job;
+    const today = new Date().toISOString().split('T')[0];
+    expect(job).toHaveProperty('entry_time', `2025-02-05 09:00:00`);
+    expect(job).toHaveProperty('exit_time', `2025-02-05 14:00:00`); // Uses default from handleMissingJobData
+  });
+
+  it('should handle description with no time information', () => {
+    const mockData = [{
+      job_id: '1',
+      date: '05-02-2025 09:00',
+      address: '123 Main St, New York, NY 10001',
+      latitude: '40.7128',
+      longitude: '-74.006',
+      duration_mins: '60',
+      description: 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: -     Entrada:  Fecha: -  Huéspedes:  2  Opciones:  -  Indicaciones:'
+    }];
+
+    const result = parseFile(mockData);
+    
+    expect(result.type).toBe('job');
+    expect(result.data).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
+
+    const job = result.data[0] as Job;
+    const today = new Date().toISOString().split('T')[0];
+    expect(job).toHaveProperty('entry_time', `2025-02-05 09:00:00`);
+    expect(job).toHaveProperty('exit_time', `2025-02-05 23:00:00`);
+  });
+
+  it('should handle multiple jobs with different description formats', () => {
+    const mockData = [
+      {
+        job_id: '1',
+        date: '05-02-2025 09:00',
+        address: '123 Main St, New York, NY 10001',
+        latitude: '40.7128',
+        longitude: '-74.006',
+        duration_mins: '60',
+        description: 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 08:40     Entrada:  Fecha: 28-03-2025 14:00  Huéspedes:  2  Opciones:  -  Indicaciones:'
+      },
+      {
+        job_id: '2',
+        date: '05-02-2025 09:00',
+        address: '456 Oak St, New York, NY 10002',
+        latitude: '40.7129',
+        longitude: '-74.007',
+        duration_mins: '60',
+        description: 'Enlace externo:  Enlace:  -      Salida:  Hora de salida: 11:00     Entrada:  Fecha: -  Huéspedes:  -  Opciones:  -  Indicaciones:  LARGA ESTANCIA 25 NOCHES'
+      }
+    ];
+
+    const result = parseFile(mockData);
+    
+    expect(result.type).toBe('job');
+    expect(result.data).toHaveLength(2);
+    expect(result.errors).toHaveLength(0);
+
+    const today = new Date().toISOString().split('T')[0];
+    
+    const job1 = result.data[0] as Job;
+    expect(job1).toHaveProperty('entry_time', '2025-02-05 08:40:00');
+    expect(job1).toHaveProperty('exit_time', '2025-02-05 14:00:00');
+
+    const job2 = result.data[1] as Job;
+    expect(job2).toHaveProperty('entry_time', `2025-02-05 11:00:00`);
+    expect(job2).toHaveProperty('exit_time', `2025-02-05 23:00:00`);
+  });
+});
+
+describe('Duration Parsing', () => {
+  it('should parse numeric duration correctly', () => {
+    expect(parseDurationValue(120)).toBe(120);
+  });
+
+  it('should parse string numeric duration correctly', () => {
+    expect(parseDurationValue('120')).toBe(120);
+  });
+
+  it('should parse hours and minutes format correctly', () => {
+    expect(parseDurationValue('2h:00m')).toBe(120);
+  });
+
+  it('should parse hours and minutes with non-zero minutes correctly', () => {
+    expect(parseDurationValue('1h:30m')).toBe(90);
+  });
+
+  it('should handle invalid duration format', () => {
+    expect(() => parseDurationValue('invalid')).toThrow('Invalid duration format');
+  });
+
+  it('should handle empty duration', () => {
+    expect(() => parseDurationValue('')).toThrow('Duration value is null or undefined');
+  });
+
+  it('should handle null duration', () => {
+    expect(() => parseDurationValue(null)).toThrow('Duration value is null or undefined');
+  });
+
+  it('should handle undefined duration', () => {
+    expect(() => parseDurationValue(undefined)).toThrow('Duration value is null or undefined');
   });
 });

@@ -1,4 +1,3 @@
-
 import { RosterRequest, RosterResponse } from "@/types/types";
 import { toast } from '@/components/ui/use-toast';
 
@@ -10,22 +9,29 @@ export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> =
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
+      mode: 'cors',  // Explicitly set CORS mode
+      credentials: 'include',  // Include credentials if you're using cookies/auth
       body: JSON.stringify(data),
     });
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(errorText);
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     
-    return await response.json();
+    const result = await response.json();
+    return result;
   } 
   catch (error) {
     console.error('Error assigning jobs:', error);
     toast({
       title: 'Error',
-      description: 'Failed to assign jobs. Please try again.',
+      description: error instanceof Error ? error.message : 'Failed to assign jobs. Please try again.',
       variant: 'destructive',
     });
+    throw error;
   }
-};
+}; 

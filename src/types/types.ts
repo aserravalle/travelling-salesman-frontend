@@ -12,6 +12,7 @@ export interface Job {
   exit_time: string;
 
   client_name?: string;
+  description?: string;
 }
 
 export interface Salesman {
