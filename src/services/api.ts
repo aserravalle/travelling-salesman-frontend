@@ -32,6 +32,6 @@ export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> =
       description: error instanceof Error ? error.message : 'Failed to assign jobs. Please try again.',
       variant: 'destructive',
     });
-    throw error;  // Re-throw to handle in the component
+    throw error;
   }
 }; 
