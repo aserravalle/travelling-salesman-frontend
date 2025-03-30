@@ -312,7 +312,7 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
 
       // If exit is before entry, set exit to end of day
       if (entry_time && exit_time < entry_time) {
-        exit_time = `${newDate} 23:59:00`;
+        exit_time = `${newDate} 23:00:00`; // TODO set to default
       }
     }
     return { entry_time, exit_time };

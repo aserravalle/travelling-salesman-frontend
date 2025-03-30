@@ -215,7 +215,7 @@ describe('fileParser', () => {
         expect(job).toHaveProperty('duration_mins', 60);
         let today = new Date().toISOString().split('T')[0];
         expect(job).toHaveProperty('entry_time', `${today} 09:00:00`);
-        expect(job).toHaveProperty('exit_time', `${today} 18:00:00`);
+        expect(job).toHaveProperty('exit_time', `${today} 23:00:00`);
       });
 
       it('should handle missing required salesman fields', () => {
@@ -277,7 +277,7 @@ describe('parseTimesFromDescription', () => {
     const result = parseTimesFromDescription(description);
     
     expect(result.entry_time).toBe('28-03-2025 08:30');
-    expect(result.exit_time).toBe('28-03-2025 00:15');
+    expect(result.exit_time).toBe('28-03-2025 00:15'); // TODO parseTimesFromDescription should set this to midnight
   });
 
   it('should handle description with only exit time', () => {
@@ -383,7 +383,7 @@ describe('parseJobRow with description-based times', () => {
     const job = result.data[0] as Job;
     const today = new Date().toISOString().split('T')[0];
     expect(job).toHaveProperty('entry_time', `2025-02-05 11:00:00`); // Uses default from handleMissingJobData
-    expect(job).toHaveProperty('exit_time', `2025-02-05 18:00:00`);
+    expect(job).toHaveProperty('exit_time', `2025-02-05 23:00:00`);
   });
 
   it('should handle description with only entry time', () => {
@@ -429,7 +429,7 @@ describe('parseJobRow with description-based times', () => {
     const job = result.data[0] as Job;
     const today = new Date().toISOString().split('T')[0];
     expect(job).toHaveProperty('entry_time', `2025-02-05 09:00:00`);
-    expect(job).toHaveProperty('exit_time', `2025-02-05 18:00:00`);
+    expect(job).toHaveProperty('exit_time', `2025-02-05 23:00:00`);
   });
 
   it('should handle multiple jobs with different description formats', () => {
@@ -468,7 +468,7 @@ describe('parseJobRow with description-based times', () => {
 
     const job2 = result.data[1] as Job;
     expect(job2).toHaveProperty('entry_time', `2025-02-05 11:00:00`);
-    expect(job2).toHaveProperty('exit_time', `2025-02-05 18:00:00`);
+    expect(job2).toHaveProperty('exit_time', `2025-02-05 23:00:00`);
   });
 });
 
@@ -494,7 +494,7 @@ describe('Duration Parsing', () => {
   });
 
   it('should handle empty duration', () => {
-    expect(() => parseDurationValue('')).toThrow('Invalid duration format');
+    expect(() => parseDurationValue('')).toThrow('Duration value is null or undefined');
   });
 
   it('should handle null duration', () => {

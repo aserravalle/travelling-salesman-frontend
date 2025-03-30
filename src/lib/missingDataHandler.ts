@@ -3,9 +3,11 @@ import { formatDateTime } from './formatDateTime';
 import { ADDRESS_COLUMN_MAPPINGS } from './columnMappings';
 
 // Default working hours
-const DEFAULT_START_HOUR = 9;
-const DEFAULT_END_HOUR = 18;
-const DEFAULT_DURATION = 60;
+const DEFAULT_SALESMAN_START_TIME = 9;
+const DEFAULT_SALESMAN_END_TIME = 18;
+const DEFAULT_JOB_ENTRY_TIME = 9;
+const DEFAULT_JOB_EXIT_TIME = 23;
+const DEFAULT_JOB_DURATION = 60;
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
@@ -97,15 +99,15 @@ export function handleMissingJobData(
 
   // Handle missing times
   if (!columnMatches.entry_time) {
-    defaults.entry_time = getDefaultTime(DEFAULT_START_HOUR);
+    defaults.entry_time = getDefaultTime(DEFAULT_JOB_ENTRY_TIME);
   }
   if (!columnMatches.exit_time) {
-    defaults.exit_time = getDefaultTime(DEFAULT_END_HOUR);
+    defaults.exit_time = getDefaultTime(DEFAULT_JOB_EXIT_TIME);
   }
 
   // Handle missing duration
   if (!columnMatches.duration_mins) {
-    defaults.duration_mins = DEFAULT_DURATION;
+    defaults.duration_mins = DEFAULT_JOB_DURATION;
   }
 
   return defaults;
@@ -125,10 +127,10 @@ export function handleMissingSalesmanData(
 
   // Handle missing times
   if (!columnMatches.start_time || !row[columnMatches.start_time]) {
-    defaults.start_time = getDefaultTime(DEFAULT_START_HOUR);
+    defaults.start_time = getDefaultTime(DEFAULT_SALESMAN_START_TIME);
   }
   if (!columnMatches.end_time || !row[columnMatches.end_time]) {
-    defaults.end_time = getDefaultTime(DEFAULT_END_HOUR);
+    defaults.end_time = getDefaultTime(DEFAULT_SALESMAN_END_TIME);
   }
 
   return defaults;
