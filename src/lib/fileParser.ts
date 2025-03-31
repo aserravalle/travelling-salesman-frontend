@@ -4,14 +4,10 @@ import {
   type DatasetType, 
   type MatchResult, 
   determineDatasetType, 
-  findBestColumnMatch 
+  findBestJobColumnMatch ,
+  findBestSalesmanColumnMatch ,
 } from './columnMatcher';
 import { formatDateTime } from './formatDateTime';
-import { 
-  ADDRESS_COLUMN_MAPPINGS,
-  JOB_COLUMN_MAPPINGS,
-  SALESMAN_COLUMN_MAPPINGS
-} from './columnMappings';
 import {
   buildLocation,
   handleMissingJobData,
@@ -138,7 +134,7 @@ export const parseFile = (rawData: any[], fileName: string = ''): ParseResult<Jo
   }
 
   function missingRequiredSalesmanFieldsType(): ParseResult<Salesman> {
-    const matches = findBestColumnMatch(columns, SALESMAN_COLUMN_MAPPINGS);
+    const matches = findBestSalesmanColumnMatch(columns);
     const hasSalesmanRequiredFields = !!(matches.start_time && matches.end_time);
     
     const missingFields = [];
@@ -167,7 +163,7 @@ export const parseFile = (rawData: any[], fileName: string = ''): ParseResult<Jo
   }
 
   function missingRequiredJobFieldsType(): ParseResult<Job | Salesman> {
-    const matches = findBestColumnMatch(columns, JOB_COLUMN_MAPPINGS);
+    const matches = findBestJobColumnMatch(columns);
     const hasJobRequiredFields = !!(matches.entry_time && matches.exit_time && matches.duration_mins);
     
     const missingFields = [];
@@ -262,7 +258,8 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
     validateRequiredFields(job, rowIndex);
     return job;
   } catch (error) {
-    throw new Error(`Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`);
+    error.message = `Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`;
+    throw error;
   }
 
   function parseDuration(): number {
