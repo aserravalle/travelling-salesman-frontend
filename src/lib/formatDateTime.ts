@@ -65,7 +65,7 @@ export function formatDateTime(value: any): string {
 }
 // Format date for display
 
-export const formatDisplayDate = (dateString: string): string => {
+export const formatDisplayDate = (dateString: string | Date): string => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
@@ -81,7 +81,7 @@ export const formatDisplayDate = (dateString: string): string => {
 };
 // Format time for display
 
-export const formatDisplayTime = (dateString: string): string => {
+export const formatDisplayTime = (dateString: string | Date): string => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);

@@ -4,8 +4,6 @@ import {
   type DatasetType, 
   type MatchResult, 
   determineDatasetType, 
-  findBestJobColumnMatch ,
-  findBestSalesmanColumnMatch ,
 } from './columnMatcher';
 import { formatDateTime } from './formatDateTime';
 import {
@@ -47,13 +45,6 @@ export const parseFile = (rawData: any[], fileName: string = ''): ParseResult<Jo
 
   // Determine the dataset type using file name and basic checks
   let type = determineDatasetType(columns, fileName);
-  
-  if (type != 'job' && type != 'salesman') { 
-    if (type === 'unknown') { return unknownDataSetType() }
-    if (type === 'missingLocation') { return missingLocationType() }
-    if (type === 'missingRequiredJobFields') { return missingRequiredJobFieldsType() }
-    if (type === 'missingRequiredSalesmanFields') { return missingRequiredSalesmanFieldsType() }
-   }
 
   const errors: ParseError[] = [];
   const parsedData: (Job | Salesman)[] = [];
@@ -102,95 +93,6 @@ export const parseFile = (rawData: any[], fileName: string = ''): ParseResult<Jo
     skippedRows,
     errors
   };
-
-  function unknownDataSetType(): ParseResult<Job | Salesman> {
-    console.error('[FileParser] Unable to identify dataset type:', {
-      columns
-    });
-    return {
-      data: [],
-      type: 'unknown',
-      skippedRows: 0,
-      errors: [{
-        message: `Unable to identify dataset type.`,
-        details: { columns }
-      }]
-    };
-  }
-
-  function missingLocationType(): ParseResult<Job | Salesman> {
-    console.error('[FileParser] Missing location in dataset:', {
-      columns
-    });
-    return {
-      data: [],
-      type: 'missingLocation',
-      skippedRows: 0,
-      errors: [{
-        message: `Missing location in dataset.`,
-        details: { columns }
-      }]
-    };
-  }
-
-  function missingRequiredSalesmanFieldsType(): ParseResult<Salesman> {
-    const matches = findBestSalesmanColumnMatch(columns);
-    const hasSalesmanRequiredFields = !!(matches.start_time && matches.end_time);
-    
-    const missingFields = [];
-    if (!hasSalesmanRequiredFields) {
-      if (!matches.start_time) missingFields.push('start_time');
-      if (!matches.end_time) missingFields.push('end_time');
-    }
-
-    console.error('[FileParser] Missing required fields in Salesman dataset:', {
-      missingFields,
-      columnMatches: matches
-    });
-
-    return {
-      data: [],
-      type: 'missingRequiredSalesmanFields',
-      skippedRows: 0,
-      errors: [{
-        message: `Missing required Salesman fields: ${missingFields.join(', ')}`,
-        details: {
-          missingFields,
-          columnMatches: matches
-        }
-      }]
-    };
-  }
-
-  function missingRequiredJobFieldsType(): ParseResult<Job | Salesman> {
-    const matches = findBestJobColumnMatch(columns);
-    const hasJobRequiredFields = !!(matches.entry_time && matches.exit_time && matches.duration_mins);
-    
-    const missingFields = [];
-    if (!hasJobRequiredFields) {
-      if (!matches.entry_time) missingFields.push('entry_time');
-      if (!matches.exit_time) missingFields.push('exit_time');
-      if (!matches.duration_mins) missingFields.push('duration_mins');
-    }
-
-    console.error('[FileParser] Missing required Job fields:', {
-      missingFields,
-      columnMatches: matches
-    });
-
-    return {
-      data: [],
-      type: 'missingRequiredJobFields',
-      skippedRows: 0,
-      errors: [{
-        message: `Missing required Job fields: ${missingFields.join(', ')}`,
-        details: {
-          missingFields,
-          columnMatches: matches
-        }
-      }]
-    };
-  }
 
   function noDataToParse(): ParseResult<Job | Salesman> {
     console.warn('[FileParser] No data to parse');
@@ -245,12 +147,14 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
     // Try to get times from description if available
     let { entry_time, exit_time } = getEntryAndExitTime(defaults, date);
 
+    const durationValue = row[columnMatches.duration_mins];
+
     const job: Job = {
       job_id: defaults.job_id || String(row[columnMatches.job_id]),
       client_name: String(row[columnMatches.client_name]),
       date,
       location,
-      duration_mins: defaults.duration_mins || parseDuration(),
+      duration_mins: defaults.duration_mins || parseDuration(durationValue),
       entry_time,
       exit_time
     };
@@ -260,31 +164,6 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
   } catch (error) {
     error.message = `Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Invalid data'}`;
     throw error;
-  }
-
-  function parseDuration(): number {
-    const durationValue = row[columnMatches.duration_mins];
-    
-    // If it's already a number, return it
-    if (typeof durationValue === 'number') {
-      return durationValue;
-    }
-    
-    // If it's a string that's just a number, parse it
-    if (/^\d+$/.test(durationValue)) {
-      return parseInt(durationValue);
-    }
-    
-    // Handle time format (e.g., "2h:00m" or "1h:30m")
-    const timeMatch = durationValue.match(/(\d+)h:(\d+)m/);
-    if (timeMatch) {
-      const hours = parseInt(timeMatch[1]);
-      const minutes = parseInt(timeMatch[2]);
-      return (hours * 60) + minutes;
-    }
-    
-    // If we can't parse it, throw an error
-    throw new Error(`Invalid duration format: ${durationValue}`);
   }
 
   function getEntryAndExitTime(defaults: Partial<Job>, date: string) {
@@ -361,20 +240,11 @@ function validateRequiredFields<T>(obj: T, rowIndex: number): void {
       }
       continue;
     }
-
-    // Regular field validation
-    if (value === undefined || value === null || value === '') {
-      console.error(`[FileParser] Missing required field in row ${rowIndex + 1}:`, {
-        field: key,
-        value
-      });
-      throw new Error(`Missing required field ${key}`);
-    }
   }
 }
 
-// Export parseDuration for testing
-export function parseDurationValue(durationValue: any): number {
+
+export function parseDuration(durationValue): number {
   if (!durationValue) {
     throw new Error(`Duration value is null or undefined`);
   }

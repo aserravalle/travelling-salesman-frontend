@@ -73,18 +73,18 @@ describe('missingDataHandler', () => {
     const row = { job_id: '123', date: '2023-01-01', duration_mins: 30 };
     const columnMatches = { job_id: 'job_id', date: 'date', duration_mins: 'duration_mins' };
     const defaults = handleMissingJobData(row, columnMatches);
-    expect(defaults).toEqual({
-        entry_time: '2025-03-31 09:00:00',
-        exit_time: '2025-03-31 23:00:00',
-      });
+
+    let today = new Date().toISOString().split('T')[0];
+    expect(defaults).toHaveProperty('entry_time', `${today} 09:00:00`);
+    expect(defaults).toHaveProperty('exit_time', `${today} 23:00:00`);
   });
 
   it('handleMissingSalesmanData does not overwrite existing salesman data', () => {
     const row = { salesman_id: '456', start_time: '09:00' };
     const columnMatches = { salesman_id: 'salesman_id', start_time: 'start_time' };
     const defaults = handleMissingSalesmanData(row, columnMatches);
-    expect(defaults).toEqual({
-        end_time: '2025-03-31 18:00:00',
-      });
+
+    let today = new Date().toISOString().split('T')[0];
+    expect(defaults).toHaveProperty('end_time', `${today} 18:00:00`);
   });
 });

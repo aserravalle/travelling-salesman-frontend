@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { determineDatasetType, matchColumns, type MatchResult } from '@/lib/columnMatcher';
+import { determineDatasetType, matchColumns, type MatchResult } from '../columnMatcher';
 
 describe('columnMatcher', () => {
   describe('Matching columns with pre determined types', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parseFile, parseTimesFromDescription, parseDurationValue } from '@/lib/fileParser';
+import { parseFile, parseTimesFromDescription, parseDuration } from '@/lib/fileParser';
 import { Job, Salesman } from '@/types/types';
 import { readFileForTest } from './testHelpers';
 import path from 'path';
@@ -169,7 +169,7 @@ describe('fileParser', () => {
 
     describe('Handle errors in parsing data', () => {
 
-      it('should handle invalid location coordinates', () => {
+      it('should handle invalid location coordinates in job data', () => {
         const mockData = [{
           job_id: '1',
           date: '05-02-2025 09:00',
@@ -183,6 +183,22 @@ describe('fileParser', () => {
         const result = parseFile(mockData);
         
         expect(result.type).toBe('job');
+        expect(result.data).toHaveLength(0);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0].message).toContain('Row 1: Location must have either an address or valid coordinates');
+      });
+
+      it('should handle invalid location coordinates in salesman data', () => {
+        const mockData = [{
+          salesman_id: '1',
+          date: '05-02-2025 09:00',
+          latitude: 'invalid',
+          longitude: '-74.006',
+        }];
+  
+        const result = parseFile(mockData);
+        
+        expect(result.type).toBe('salesman');
         expect(result.data).toHaveLength(0);
         expect(result.errors).toHaveLength(1);
         expect(result.errors[0].message).toContain('Row 1: Location must have either an address or valid coordinates');
@@ -474,34 +490,34 @@ describe('parseJobRow with description-based times', () => {
 
 describe('Duration Parsing', () => {
   it('should parse numeric duration correctly', () => {
-    expect(parseDurationValue(120)).toBe(120);
+    expect(parseDuration(120)).toBe(120);
   });
 
   it('should parse string numeric duration correctly', () => {
-    expect(parseDurationValue('120')).toBe(120);
+    expect(parseDuration('120')).toBe(120);
   });
 
   it('should parse hours and minutes format correctly', () => {
-    expect(parseDurationValue('2h:00m')).toBe(120);
+    expect(parseDuration('2h:00m')).toBe(120);
   });
 
   it('should parse hours and minutes with non-zero minutes correctly', () => {
-    expect(parseDurationValue('1h:30m')).toBe(90);
+    expect(parseDuration('1h:30m')).toBe(90);
   });
 
   it('should handle invalid duration format', () => {
-    expect(() => parseDurationValue('invalid')).toThrow('Invalid duration format');
+    expect(() => parseDuration('invalid')).toThrow('Invalid duration format');
   });
 
   it('should handle empty duration', () => {
-    expect(() => parseDurationValue('')).toThrow('Duration value is null or undefined');
+    expect(() => parseDuration('')).toThrow('Duration value is null or undefined');
   });
 
   it('should handle null duration', () => {
-    expect(() => parseDurationValue(null)).toThrow('Duration value is null or undefined');
+    expect(() => parseDuration(null)).toThrow('Duration value is null or undefined');
   });
 
   it('should handle undefined duration', () => {
-    expect(() => parseDurationValue(undefined)).toThrow('Duration value is null or undefined');
+    expect(() => parseDuration(undefined)).toThrow('Duration value is null or undefined');
   });
 });

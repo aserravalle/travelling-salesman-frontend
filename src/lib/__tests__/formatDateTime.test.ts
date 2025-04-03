@@ -31,4 +31,17 @@ describe('date formatting', () => {
     expect(formatDisplayDate('')).toBe('');
     expect(formatDisplayTime('')).toBe('');
   });
+
+  it('should handle undefined input', () => {
+    expect(() => formatDateTime(undefined)).toThrow('Date/time value is missing');
+    expect(formatDisplayDate('')).toBe('');
+    expect(formatDisplayTime('')).toBe('');
+  });
+
+  it('should handle Date input', () => {
+    let input = new Date(2024, 1, 1, 9, 0, 0); // 1st February 2024
+    expect(formatDateTime(input)).toBe('2024-02-01 09:00:00');
+    expect(formatDisplayDate(input)).toBe('01 February 2024');
+    expect(formatDisplayTime(input)).toBe('09:00');
+  });
 }); 
