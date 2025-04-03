@@ -1,8 +1,6 @@
-import { Salesman } from '@/types/types';
 import { LOCATION_COLUMN_MAPPINGS } from './locationMappings';
-import { ColumnMapping } from './ColumnMapping';
 
-export const SALESMAN_COLUMN_MAPPINGS: ColumnMapping<Salesman> = {
+export const SALESMAN_COLUMN_MAPPINGS = {
   salesman_id: [
     'salesman_id',
     'salesmanid',

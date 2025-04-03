@@ -20,5 +20,5 @@ export const LOCATION_COLUMN_MAPPINGS = {
     'home_longitude',
     'long_coordinate'
   ],
-  address: ADDRESS_COLUMN_MAPPINGS.address,
+  ...ADDRESS_COLUMN_MAPPINGS,
 }; 

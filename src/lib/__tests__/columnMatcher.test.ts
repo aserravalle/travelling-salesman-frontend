@@ -102,10 +102,14 @@ describe('columnMatcher', () => {
       
       expect(result.type).toBe('job');
       expect(result.columnMatches).toEqual({
-        client_name: 'Tarea',
         address: 'Dirección',
-        "description": "Descripción",
+        city: 'Población',
+        client_name: 'Tarea',
+        country: 'País',
+        description: 'Descripción',
         duration_mins: 'Duración',
+        postcode: 'CP',
+        province: 'Provincia',
       });
     });
 

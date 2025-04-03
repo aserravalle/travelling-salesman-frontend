@@ -1,8 +1,6 @@
-import { Job } from '@/types/types';
 import { LOCATION_COLUMN_MAPPINGS } from './locationMappings';
-import { ColumnMapping } from './ColumnMapping';
 
-export const JOB_COLUMN_MAPPINGS: ColumnMapping<Job> = {
+export const JOB_COLUMN_MAPPINGS = {
   job_id: [
     'job_id',
     'jobid',
