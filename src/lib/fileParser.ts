@@ -5,7 +5,7 @@ import {
   type MatchResult, 
   determineDatasetType, 
 } from './columnMatcher';
-import { formatDateTime } from './formatDateTime';
+import { readDateTime } from './formatDateTime';
 import {
   buildLocation,
   handleMissingJobData,
@@ -142,7 +142,7 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
     
     // Build location from available data
     const location = buildLocation(row, columnMatches);
-    let date = defaults.date || formatDateTime(row[columnMatches.date]);
+    let date = defaults.date || readDateTime(row[columnMatches.date]);
 
     // Try to get times from description if available
     let { entry_time, exit_time } = getEntryAndExitTime(defaults, date);
@@ -167,13 +167,13 @@ function parseJobRow(row: any, matchResult: MatchResult, rowIndex: number): Job 
   }
 
   function getEntryAndExitTime(defaults: Partial<Job>, date: string) {
-    let entry_time = defaults.entry_time || formatDateTime(row[columnMatches.entry_time]);
-    let exit_time = defaults.exit_time || formatDateTime(row[columnMatches.exit_time]);
+    let entry_time = defaults.entry_time || readDateTime(row[columnMatches.entry_time]);
+    let exit_time = defaults.exit_time || readDateTime(row[columnMatches.exit_time]);
 
     if (row[columnMatches.description]) {
       const timesFromDesc = parseTimesFromDescription(row[columnMatches.description]);
-      if (timesFromDesc.entry_time) entry_time = formatDateTime(timesFromDesc.entry_time);
-      if (timesFromDesc.exit_time) exit_time = formatDateTime(timesFromDesc.exit_time);
+      if (timesFromDesc.entry_time) entry_time = readDateTime(timesFromDesc.entry_time);
+      if (timesFromDesc.exit_time) exit_time = readDateTime(timesFromDesc.exit_time);
     }
 
     // Ensure entry_time uses the same date as the job
@@ -214,8 +214,8 @@ function parseSalesmanRow(row: any, matchResult: MatchResult, rowIndex: number):
       salesman_id: defaults.salesman_id || String(row[columnMatches.salesman_id]),
       salesman_name: String(row[columnMatches.salesman_name]),
       location,
-      start_time: defaults.start_time || formatDateTime(row[columnMatches.start_time]),
-      end_time: defaults.end_time || formatDateTime(row[columnMatches.end_time])
+      start_time: defaults.start_time || readDateTime(row[columnMatches.start_time]),
+      end_time: defaults.end_time || readDateTime(row[columnMatches.end_time])
     };
 
     validateRequiredFields(salesman, rowIndex);

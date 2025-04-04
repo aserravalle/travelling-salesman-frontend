@@ -1,5 +1,5 @@
 import { Job, Salesman, Location } from '@/types/types';
-import { formatDateTime } from './formatDateTime';
+import { readDateTime } from './formatDateTime';
 import { ADDRESS_COLUMN_MAPPINGS } from './columnMappings/addressMappings';
 
 // Default working hours
@@ -19,7 +19,7 @@ function getTodayDate(): string {
 function getDefaultTime(hour: number): string {
   const today = new Date();
   today.setHours(hour, 0, 0, 0);
-  return formatDateTime(today.toISOString());
+  return readDateTime(today.toISOString());
 }
 
 // Reset ID counters for each new file
