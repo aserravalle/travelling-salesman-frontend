@@ -7,7 +7,10 @@ export default defineConfig({
       provider: 'v8', // v8 provider for coverage
       reporter: ['text', 'html', 'json-summary'], // Generate text and HTML reports
       reportsDirectory: './coverage', // Directory to store coverage reports
-      include: ['src/lib/*.{ts,tsx}'], // Currently only tests the lib
+      include: [
+        'src/lib/*.{ts,tsx}',
+        'src/lib/rowParser/*.{ts,tsx}',
+      ], // Currently only tests the lib
       exclude: [
         'src/lib/__tests__/**/*',
         'src/lib/rowParser/__tests__/**/*',
