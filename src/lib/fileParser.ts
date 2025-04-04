@@ -1,8 +1,6 @@
 import { Job, Salesman } from '@/types/types';
-import { type DatasetType, determineDatasetType } from './columnMatcher';
-import { resetIdCounters } from './missingDataHandler';
-import { JobRowParser } from './rowParser/jobRowParser';
-import { SalesmanRowParser } from './rowParser/salesmanRowParser';
+import { type DatasetType, determineDatasetType, matchColumns } from './columnMatcher';
+import { RowParserFactory } from './rowParser/RowParserFactory';
 
 export interface ParseError {
   row?: number;
@@ -28,20 +26,17 @@ export const parseFile = (rawData: any[], fileName: string = ''): ParseResult<Jo
 
   if (!rawData.length) { return noDataToParse() };
 
-  // Reset ID counters for the new file
-  resetIdCounters();
-
   const columns = Object.keys(rawData[0]);
   console.debug('[FileParser] Detected columns:', columns);
 
   // Determine the dataset type using file name and basic checks
   let type = determineDatasetType(columns, fileName);
+  const matchResult = matchColumns(Object.keys(rawData[0]), type);
+  const rowParser = RowParserFactory.New(type, matchResult);
 
   const errors: ParseError[] = [];
   const parsedData: (Job | Salesman)[] = [];
   let skippedRows = 0;
-
-  const rowParser = type === 'job' ? new JobRowParser() : new SalesmanRowParser()
 
   for (let i = 0; i < rawData.length; i++) {
     try {

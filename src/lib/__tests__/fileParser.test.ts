@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { parseFile } from '@/lib/fileParser';
-import { parseTimesFromDescription, parseDuration } from '@/lib/rowParser/jobRowParser';
 import { Job, Salesman } from '@/types/types';
 import { readFileForTest } from './testHelpers';
 import path from 'path';
+import fs from 'fs';
+import { ReadResult } from '../fileReader';
 
 // Mock Papa Parse
 vi.mock('papaparse', () => ({
@@ -109,6 +110,8 @@ describe('fileParser', () => {
             job_id: '1',
             date: '05-02-2025 09:00',
             address: '123 Main St, New York, NY 10001',
+            latitude: undefined,
+            longitude: undefined,
             duration_mins: '60',
             entry_time: '05-02-2025 09:00',
             exit_time: '05-02-2025 12:00'
@@ -274,7 +277,6 @@ describe('fileParser', () => {
         expect(result.errors[0].message).toContain('Row 1: Location must have either an address or valid coordinates');
       });
     });
-
   });
 });
 

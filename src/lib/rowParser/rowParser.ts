@@ -1,13 +1,18 @@
-import { ColumnMatch, DatasetType, matchColumns, MatchResult } from "../columnMatcher";
+import { ColumnMatch, DatasetType, matchColumns } from "../columnMatcher";
 import { Location } from '@/types/types';
+import { resetIdCounters } from '../missingDataHandler';
 
 export abstract class RowParser<T> {
+
+    constructor(columnMatches: ColumnMatch) {
+        this.columnMatches = columnMatches;
+        resetIdCounters();
+    }
+
     abstract parserType: DatasetType;
     columnMatches: ColumnMatch;
 
     parse(row: any[]): T {
-        const matchResult = matchColumns(Object.keys(row), this.parserType);
-        this.columnMatches = matchResult.columnMatches;
         let parsedRow = this.parseCore(row)
         this.validateRequiredFields(parsedRow);
         return parsedRow;
@@ -27,3 +32,5 @@ export abstract class RowParser<T> {
         }
     }
 }
+
+
