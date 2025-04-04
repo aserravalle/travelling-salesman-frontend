@@ -1,6 +1,6 @@
 import { ColumnMatch, DatasetType, matchColumns } from "../columnMatcher";
 import { Location } from '@/types/types';
-import { resetIdCounters } from '../missingDataHandler';
+import { resetIdCounters } from './missingDataHandler';
 
 export abstract class RowParser<T> {
 

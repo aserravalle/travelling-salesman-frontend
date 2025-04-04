@@ -69,7 +69,7 @@ describe('parseTimesFromDescription', () => {
     const result = JobRowParser.parseTimesFromDescription(description);
     
     expect(result.entry_time).toBe('28-03-2025 08:30');
-    expect(result.exit_time).toBe('28-03-2025 00:15'); // TODOJobRowParser.parseTimesFromDescription should set this to midnight
+    expect(result.exit_time).toBe('28-03-2025 00:15'); // TODO: JobRowParser.parseTimesFromDescription should set this to midnight
   });
 
   it('should handle description with only exit time', () => {

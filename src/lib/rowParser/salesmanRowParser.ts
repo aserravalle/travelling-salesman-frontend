@@ -1,7 +1,7 @@
 import { Salesman } from "@/types/types";
 import { RowParser } from "./rowParser";
-import { DatasetType, ColumnMatch } from "../columnMatcher";
-import { buildLocation, handleMissingSalesmanData } from "../missingDataHandler";
+import { DatasetType } from "../columnMatcher";
+import { buildLocation, handleMissingSalesmanData } from "./missingDataHandler";
 import { readDateTime } from "../formatDateTime";
 
 export class SalesmanRowParser<T extends Salesman> extends RowParser<T> {

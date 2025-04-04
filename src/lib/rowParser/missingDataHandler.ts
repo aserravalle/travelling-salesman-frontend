@@ -1,6 +1,6 @@
 import { Job, Salesman, Location } from '@/types/types';
-import { readDateTime } from './formatDateTime';
-import { ADDRESS_COLUMN_MAPPINGS } from './columnMappings/addressMappings';
+import { readDateTime } from '../formatDateTime';
+import { ADDRESS_COLUMN_MAPPINGS } from '../columnMappings/addressMappings';
 
 // Default working hours
 const DEFAULT_SALESMAN_START_TIME = 9;

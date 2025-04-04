@@ -5,7 +5,7 @@ import {
   buildLocation,
   handleMissingJobData,
   handleMissingSalesmanData
-} from '../missingDataHandler';
+} from '../rowParser/missingDataHandler';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('missingDataHandler', () => {

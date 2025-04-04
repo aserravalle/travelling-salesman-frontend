@@ -104,6 +104,38 @@ describe('fileParser', () => {
         expect(job).toHaveProperty('exit_time', '2025-02-05 12:00:00');
       });
 
+      it('should combine address data', () => {
+        const mockData = [{
+          job_id: '1',
+          date: '05-02-2025 09:00',
+          latitude: '40.7128',
+          longitude: '-74.006',
+          duration_mins: '60',
+          entry_time: '05-02-2025 09:00',
+          exit_time: '05-02-2025 12:00',
+
+          address: '123 Main St',
+          postcode: '10001',
+          city: 'New York',
+          province: 'NY',
+          country: 'USA',
+        }];
+  
+        const result = parseFile(mockData);
+        
+        expect(result.type).toBe('job');
+        expect(result.data).toHaveLength(1);
+        expect(result.errors).toHaveLength(0);
+  
+        const job = result.data[0] as Job;
+        expect(job).toHaveProperty('job_id', '1');
+        expect(job.location).toEqual({
+          address: '123 Main St, 10001, New York, NY, USA',
+          latitude: 40.7128,
+          longitude: -74.006
+        });
+      });
+
       it('should handle different location types', () => {
         const mockData = [
           {

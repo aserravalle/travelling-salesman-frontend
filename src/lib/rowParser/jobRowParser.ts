@@ -1,7 +1,7 @@
 import { Job } from "@/types/types";
 import { DatasetType } from "../columnMatcher";
 import { RowParser } from "./rowParser";
-import { buildLocation, handleMissingJobData } from "../missingDataHandler";
+import { buildLocation, handleMissingJobData } from "./missingDataHandler";
 import { readDateTime } from "../formatDateTime";
 
 export class JobRowParser<T extends Job> extends RowParser<T> {
