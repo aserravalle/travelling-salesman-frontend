@@ -52,30 +52,33 @@ jobs:
       if: github.event_name == 'pull_request'
       with:
         script: |
+          const owner = context.payload.repository.owner.login;
+          const repo = context.payload.repository.name;
+          const pull_number = context.issue.number;
+
           const coverage = `${{ steps.coverage.outputs.coverage }}`;
           const body = `🛡️ **Test Coverage:** \`${coverage}%\`\n\nGreat job! 🚀`;
-          
-          // Try to find an existing comment to update
+
           const { data: comments } = await github.rest.issues.listComments({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.name,
+            owner,
+            repo,
+            issue_number: pull_number,
           });
 
           const existingComment = comments.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('🛡️ **Test Coverage:**'));
 
           if (existingComment) {
             await github.rest.issues.updateComment({
+              owner,
+              repo,
               comment_id: existingComment.id,
-              owner: context.repo.owner,
-              repo: context.repo.name,
               body: body,
             });
           } else {
             await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.name,
+              owner,
+              repo,
+              issue_number: pull_number,
               body: body,
             });
           }
