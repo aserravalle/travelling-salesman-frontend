@@ -10,6 +10,7 @@ export default defineConfig({
       include: ['src/lib/*.{ts,tsx}'], // Currently only tests the lib
       exclude: [
         'src/lib/__tests__/**/*',
+        'src/lib/rowParser/__tests__/**/*',
         'src/lib/utils.ts',
         'src/lib/motion.ts',
       ], // Exclude test files and specific directories

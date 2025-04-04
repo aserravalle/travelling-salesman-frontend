@@ -2,7 +2,7 @@ import { JOB_FILE_NAMES, SALESMAN_FILE_NAMES } from "./columnMappings/fileNameMa
 import { JOB_COLUMN_MAPPINGS } from "./columnMappings/jobMappings";
 import { SALESMAN_COLUMN_MAPPINGS } from "./columnMappings/salesmanMappings";
 
-export type DatasetType = 'job' | 'salesman' | 'unknown' | 'missingLocation' | 'missingRequiredJobFields' | 'missingRequiredSalesmanFields';
+export type DatasetType = 'job' | 'salesman' | 'unknown';
 export type ColumnMatch = { [key: string]: string };
 
 export interface MatchResult {
