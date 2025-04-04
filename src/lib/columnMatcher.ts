@@ -1,12 +1,8 @@
-import { 
-  JOB_COLUMN_MAPPINGS, 
-  SALESMAN_COLUMN_MAPPINGS, 
-  LOCATION_COLUMN_MAPPINGS,
-  JOB_FILE_NAMES,
-  SALESMAN_FILE_NAMES
-} from './columnMappings';
+import { JOB_FILE_NAMES, SALESMAN_FILE_NAMES } from "./columnMappings/fileNameMappings";
+import { JOB_COLUMN_MAPPINGS } from "./columnMappings/jobMappings";
+import { SALESMAN_COLUMN_MAPPINGS } from "./columnMappings/salesmanMappings";
 
-export type DatasetType = 'job' | 'salesman' | 'unknown' | 'missingLocation' | 'missingRequiredJobFields' | 'missingRequiredSalesmanFields';
+export type DatasetType = 'job' | 'salesman' | 'unknown';
 export type ColumnMatch = { [key: string]: string };
 
 export interface MatchResult {
@@ -22,8 +18,7 @@ function hasMatchingColumn(columnName: string, possibleNames: string[]): boolean
   );
 }
 
-// returns a direct match in columnMappings.ts
-export function findBestColumnMatch(columns: string[], mappings: { [key: string]: string[] }): ColumnMatch {
+function findBestColumnMatch(columns: string[], mappings: { [key: string]: string[] }): ColumnMatch {
   const matches: ColumnMatch = {};
   
   for (const [targetField, possibleNames] of Object.entries(mappings)) {

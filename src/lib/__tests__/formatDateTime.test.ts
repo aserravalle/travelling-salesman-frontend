@@ -1,34 +1,77 @@
 import { describe, it, expect } from 'vitest';
-import { formatDateTime, formatDisplayDate, formatDisplayTime } from '../formatDateTime';
+import { readDateTime, formatDisplayDate, formatDisplayTime } from '../formatDateTime';
 
 describe('date formatting', () => {
-  it('should format date-time string correctly', () => {
+  it('dd-MM-YYYY', () => {
     const input = '05-02-2025 09:00';
-    const result = formatDateTime(input);
-    expect(result).toBe('2025-02-05 09:00:00');
+    testCase(input);
   });
 
-  it('should format display date correctly', () => {
-    const input = '2025-02-05 09:00:00';
-    const result = formatDisplayDate(input);
-    expect(result).toBe('05 February 2025');
+  it('YYYY-MM-ddTHH:MM:ssZ', () => {
+    const input = new Date(2025,1,5,9,0,0).toISOString();
+    testCase(input);
   });
 
-  it('should format display time correctly', () => {
+  it('dd MM YYYY', () => {
+    const input = '05 02 2025 09:00';
+    testCase(input);
+  });
+
+  it('dd.MM.YYYY', () => {
+    const input = '05.02.2025 09:00';
+    testCase(input);
+  });
+
+  it('dd/MM/YYYY', () => {
+    const input = '05/02/2025 09:00';
+    testCase(input);
+  });
+
+  it('YYYY-MM-dd', () => {
     const input = '2025-02-05 09:00:00';
-    const result = formatDisplayTime(input);
-    expect(result).toBe('09:00');
+    testCase(input);
+  });
+
+  it('YYYY.MM.dd', () => {
+    const input = '2025.02.05 09:00:00';
+    testCase(input);
+  });
+
+  it('YYYY MM dd', () => {
+    const input = '2025 02 05 09:00:00';
+    testCase(input);
+  });
+
+  it('YYYY/MM/dd', () => {
+    const input = '2025/02/05 09:00:00';
+    testCase(input);
   });
 
   it('should handle invalid date input', () => {
-    expect(() => formatDateTime('invalid-date')).toThrow('Invalid date');
+    expect(() => readDateTime('invalid-date')).toThrow('Invalid date');
     expect(formatDisplayDate('invalid-date')).toBe('');
     expect(formatDisplayTime('invalid-date')).toBe('');
   });
 
   it('should handle empty input', () => {
-    expect(() => formatDateTime('')).toThrow('Date/time value is missing');
+    expect(() => readDateTime('')).toThrow('Date/time value is missing');
+    expect(formatDisplayDate('')).toBe('');
+    expect(formatDisplayTime('')).toBe('');
+  });
+
+  it('should handle undefined input', () => {
+    expect(() => readDateTime(undefined)).toThrow('Date/time value is missing');
     expect(formatDisplayDate('')).toBe('');
     expect(formatDisplayTime('')).toBe('');
   });
 }); 
+
+function testCase(input: string) {
+  const readInput = readDateTime(input);
+  expect(readInput).toBe('2025-02-05 09:00:00');
+  expect(formatDisplayDate(readInput)).toBe('05 February 2025');
+  expect(formatDisplayTime(readInput)).toBe('09:00');
+
+  expect(formatDisplayDate(input)).toBe('05 February 2025');
+  expect(formatDisplayTime(input)).toBe('09:00');
+}

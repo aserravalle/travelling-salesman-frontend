@@ -6,24 +6,79 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Run tests
-      run: npm test
-    
+      run: npm run test
+
     - name: Run test coverage
-      run: npm run coverage 
+      run: npm run coverage
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage/
+
+    - name: Install jq (to parse JSON)
+      run: sudo apt-get install -y jq
+
+    - name: Extract coverage percentage
+      id: coverage
+      run: |
+        COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+        echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+
+    - name: Post coverage comment
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const owner = context.payload.repository.owner.login;
+          const repo = context.payload.repository.name;
+          const pull_number = context.issue.number;
+
+          const coverage = `${{ steps.coverage.outputs.coverage }}`;
+          const body = `🛡️ **Test Coverage:** \`${coverage}%\`\n\nGreat job! 🚀`;
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner,
+            repo,
+            issue_number: pull_number,
+          });
+
+          const existingComment = comments.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('🛡️ **Test Coverage:**'));
+
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner,
+              repo,
+              comment_id: existingComment.id,
+              body: body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pull_number,
+              body: body,
+            });
+          }

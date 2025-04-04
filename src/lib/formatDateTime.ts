@@ -1,7 +1,7 @@
-import { parse as parseDate, isValid, format } from 'date-fns';
+import { parse as parseDate, parseISO, isValid, format } from 'date-fns';
 
 
-export function formatDateTime(value: any): string {
+export function readDateTime(value: any): string {
   console.debug('[FileParser] Formatting date/time value:', value);
 
   if (!value) {
@@ -25,16 +25,23 @@ export function formatDateTime(value: any): string {
 
     // If value is a string
     else {
-      const dateStr = String(value).trim();
+      const dateStr = String(value).trim()
 
-      // Try ISO format first
-      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-        parsedDate = new Date(dateStr);
-      }
-
-      // Try dd-MM-yyyy HH:mm format
+      // Try parsing ISO 8601 format
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(dateStr)) {
+        parsedDate = parseISO(dateStr);
+      } 
       else {
-        parsedDate = parseDate(dateStr, 'dd-MM-yyyy HH:mm', new Date());
+        const normalisedDate = dateStr.replace(/[-./]/g, ' ');
+  
+        // Try ISO format first
+        if (/^\d{4} \d{2} \d{2}/.test(normalisedDate)) {
+          parsedDate = new Date(normalisedDate);
+        }
+  
+        else {
+          parsedDate = parseDate(normalisedDate, 'dd MM yyyy HH:mm', new Date());
+        }
       }
     }
 
@@ -63,12 +70,13 @@ export function formatDateTime(value: any): string {
     throw new Error('Invalid date/time format');
   }
 }
-// Format date for display
 
+// Format date for display
 export const formatDisplayDate = (dateString: string): string => {
   if (!dateString) return '';
   try {
-    const date = new Date(dateString);
+    dateString = readDateTime(dateString)
+    const date = parseDate(dateString, 'yyyy-MM-dd HH:mm:ss', new Date());
     if (!isValid(date)) return '';
     return format(date, 'dd MMMM yyyy');
   } catch (error) {
@@ -79,12 +87,13 @@ export const formatDisplayDate = (dateString: string): string => {
     return '';
   }
 };
-// Format time for display
 
+// Format time for display
 export const formatDisplayTime = (dateString: string): string => {
   if (!dateString) return '';
   try {
-    const date = new Date(dateString);
+    dateString = readDateTime(dateString)
+    const date = parseDate(dateString, 'yyyy-MM-dd HH:mm:ss', new Date());
     if (!isValid(date)) return '';
     return format(date, 'HH:mm');
   } catch (error) {

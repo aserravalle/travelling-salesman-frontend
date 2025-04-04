@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { determineDatasetType, matchColumns, type MatchResult } from '@/lib/columnMatcher';
+import { determineDatasetType, matchColumns, type MatchResult } from '../columnMatcher';
 
 describe('columnMatcher', () => {
   describe('Matching columns with pre determined types', () => {
@@ -102,10 +102,14 @@ describe('columnMatcher', () => {
       
       expect(result.type).toBe('job');
       expect(result.columnMatches).toEqual({
-        client_name: 'Tarea',
         address: 'Dirección',
-        "description": "Descripción",
+        city: 'Población',
+        client_name: 'Tarea',
+        country: 'País',
+        description: 'Descripción',
         duration_mins: 'Duración',
+        postcode: 'CP',
+        province: 'Provincia',
       });
     });
 

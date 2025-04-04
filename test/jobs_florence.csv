@@ -1,0 +1,8 @@
+job_id,date,duration_mins,entry_time,exit_time,customer,address
+1,28-3-2025 9:00,120,28-3-2025 8:00,28-3-2025 23:00,Airbnb 1,"Via dei Neri 1, Florence"
+2,28-3-2025 9:00,90,28-3-2025 12:00,28-3-2025 23:00,Airbnb 2,"Via della Vigna Nuova 2, Florence"
+3,28-3-2025 9:00,120,28-3-2025 11:00,28-3-2025 23:00,Airbnb 3,"Via de' Tornabuoni 3, Florence"
+4,28-3-2025 9:00,120,28-3-2025 11:00,28-3-2025 23:00,Airbnb 4,"Via de' Benci 4, Florence"
+5,28-3-2025 9:00,120,28-3-2025 8:40,28-3-2025 14:00,Airbnb 5,"Via Ghibellina 5, Florence"
+6,28-3-2025 9:00,120,28-3-2025 10:00,28-3-2025 23:00,Airbnb 6,"Borgo San Lorenzo 6, Florence"
+7,28-3-2025 9:00,120,28-3-2025 10:00,28-3-2025 14:30,Airbnb 7,"Piazza Santa Croce 7, Florence"
