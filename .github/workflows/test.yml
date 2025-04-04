@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -34,10 +38,12 @@ jobs:
         name: coverage-report
         path: coverage/
 
+    - name: Install jq (to parse JSON)
+      run: sudo apt-get install -y jq
+
     - name: Extract coverage percentage
       id: coverage
       run: |
-        sudo apt-get install -y jq
         COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)
         echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
 
@@ -48,9 +54,28 @@ jobs:
         script: |
           const coverage = `${{ steps.coverage.outputs.coverage }}`;
           const body = `🛡️ **Test Coverage:** \`${coverage}%\`\n\nGreat job! 🚀`;
-          await github.rest.issues.createComment({
+          
+          // Try to find an existing comment to update
+          const { data: comments } = await github.rest.issues.listComments({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.name,
-            body: body,
           });
+
+          const existingComment = comments.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('🛡️ **Test Coverage:**'));
+
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              comment_id: existingComment.id,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: body,
+            });
+          }
