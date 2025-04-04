@@ -8,7 +8,7 @@ describe('date formatting', () => {
   });
 
   it('YYYY-MM-ddTHH:MM:ssZ', () => {
-    const input = '2025-02-05T08:00:00.000Z';
+    const input = new Date(2025,1,5,9,0,0).toISOString();
     testCase(input);
   });
 

@@ -18,15 +18,6 @@ function hasMatchingColumn(columnName: string, possibleNames: string[]): boolean
   );
 }
 
-// returns a direct match in columnMappings.ts
-export function findBestJobColumnMatch(columns: string[]): ColumnMatch {
-  return findBestColumnMatch(columns, JOB_COLUMN_MAPPINGS);
-}
-
-export function findBestSalesmanColumnMatch(columns: string[]): ColumnMatch {
-  return findBestColumnMatch(columns, SALESMAN_COLUMN_MAPPINGS);
-}
-
 function findBestColumnMatch(columns: string[], mappings: { [key: string]: string[] }): ColumnMatch {
   const matches: ColumnMatch = {};
   
