@@ -1,13 +1,13 @@
 import Papa from 'papaparse';
-import { JobTableRow, RosterResponse } from '@/types/types';
+import { AssignedJobTableRow, RosterResponse } from '@/types/types';
 
 /**
  * Converts a roster response into table rows for display
  */
-export const convertResponseToTableRows = (response: RosterResponse): JobTableRow[] => {
+export const convertResponseToTableRows = (response: RosterResponse): AssignedJobTableRow[] => {
   console.log('[TableConverter] Converting response to table rows:', response);
   
-  const rows: JobTableRow[] = [];
+  const rows: AssignedJobTableRow[] = [];
   
   // Process assigned jobs
   Object.entries(response.jobs).forEach(([salesman_id, jobs]) => {
@@ -56,11 +56,20 @@ export const convertResponseToTableRows = (response: RosterResponse): JobTableRo
 /**
  * Converts table data to CSV format
  */
-export const exportTableToCSV = (rows: any[]): string => {
+export const exportTableToCSV = (rows: AssignedJobTableRow[]): string => {
   console.log('[TableConverter] Exporting table data to CSV:', {
     rowCount: rows.length
   });
-  return Papa.unparse(rows);
+
+  // hack to get the location
+  const processedRows = rows.map(row => ({
+    ...row,
+    location: row.location?.address || '',
+    latitude: row.location?.latitude || null,
+    longitude: row.location?.longitude || null,
+  }));
+
+  return Papa.unparse(processedRows);
 };
 
 /**

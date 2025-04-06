@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileUpload } from '@/components/FileUpload';
-import { DataTable } from '@/components/DataTable';
+import { AssignedJobDataTable } from '@/components/DataTables/AssignedJobDataTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +12,7 @@ import { readFile } from '@/lib/fileReader';
 import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
 import { assignJobs } from '@/services/api';
 import { fadeIn } from '@/lib/motion';
-import { Job, Salesman, JobTableRow, RosterRequest } from '@/types/types';
+import { Job, Salesman, AssignedJobTableRow, RosterRequest } from '@/types/types';
 import { Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import Map from '@/components/Map';
 import StatusBanner from '@/components/StatusBanner';
@@ -30,8 +30,8 @@ const Index = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [parsedJobs, setParsedJobs] = useState<Job[]>([]);
   const [parsedSalesmen, setParsedSalesmen] = useState<Salesman[]>([]);
-  const [resultRows, setResultRows] = useState<JobTableRow[]>([]);
-  const [filteredRows, setFilteredRows] = useState<JobTableRow[]>([]);
+  const [resultRows, setResultRows] = useState<AssignedJobTableRow[]>([]);
+  const [filteredRows, setFilteredRows] = useState<AssignedJobTableRow[]>([]);
   const [activeTab, setActiveTab] = useState('upload');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasResults, setHasResults] = useState(false);
@@ -212,7 +212,7 @@ const Index = () => {
     });
   };
 
-  const handleFilteredDataChange = (data: JobTableRow[]) => {
+  const handleFilteredDataChange = (data: AssignedJobTableRow[]) => {
     setFilteredRows(data);
   };
 
@@ -472,7 +472,7 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="mt-4">
-                      <DataTable 
+                      <AssignedJobDataTable 
                         data={resultRows} 
                         onExport={handleExport} 
                         onFilteredDataChange={handleFilteredDataChange}

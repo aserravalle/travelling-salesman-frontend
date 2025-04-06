@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Route } from 'lucide-react';
-import { JobTableRow } from '@/types/types';
+import { AssignedJobTableRow } from '@/types/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
@@ -25,8 +25,8 @@ declare namespace GeoJSON {
 }
 
 interface MapProps {
-  data: JobTableRow[];
-  filteredData?: JobTableRow[];
+  data: AssignedJobTableRow[];
+  filteredData?: AssignedJobTableRow[];
   title?: string;
   description?: string;
 }
@@ -186,7 +186,7 @@ const Map = ({
     });
   };
   
-  const addMarker = (job: JobTableRow) => {
+  const addMarker = (job: AssignedJobTableRow) => {
     if (!map.current || !job.location.latitude || !job.location.longitude) return;
     
     const isAssigned = job.assignment_status === 'Assigned';
@@ -241,7 +241,7 @@ const Map = ({
     if (!map.current || !routeRef.current) return;
     
     // Group jobs by salesman_id
-    const salesmanJobs: { [key: string]: JobTableRow[] } = {};
+    const salesmanJobs: { [key: string]: AssignedJobTableRow[] } = {};
     
     // If filtered by a specific salesman, only add routes for that salesman
     if (filteredSalesmanId) {
