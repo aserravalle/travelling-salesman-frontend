@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
-import { AssignedJobTableRow, Location } from '@/types/types';
+import { RosterTableRow, Location } from '@/types/types';
 import { cn } from '@/lib/utils';
 
 interface Column {
@@ -40,12 +40,12 @@ interface Column {
 }
 
 interface DataTableProps {
-  data: AssignedJobTableRow[];
+  data: RosterTableRow[];
   onExport?: () => void;
-  onFilteredDataChange?: (filteredData: AssignedJobTableRow[]) => void;
+  onFilteredDataChange?: (filteredData: RosterTableRow[]) => void;
 }
 
-export const AssignedJobDataTable = ({ data, onExport, onFilteredDataChange }: DataTableProps) => {
+export const RosterDataTable = ({ data, onExport, onFilteredDataChange }: DataTableProps) => {
   const [sortBy, setSortBy] = useState<string>('start_time');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');

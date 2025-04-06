@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
-import { RosterResponse, Location, AssignedJobTableRow } from '@/types/types';
+import { RosterResponse, Location } from '@/types/types';
 import Papa from 'papaparse';
 
 // Mock Papa Parse

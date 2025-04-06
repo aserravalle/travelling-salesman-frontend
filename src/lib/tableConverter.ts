@@ -1,13 +1,13 @@
 import Papa from 'papaparse';
-import { AssignedJobTableRow, RosterResponse } from '@/types/types';
+import { RosterTableRow, RosterResponse } from '@/types/types';
 
 /**
  * Converts a roster response into table rows for display
  */
-export const convertResponseToTableRows = (response: RosterResponse): AssignedJobTableRow[] => {
+export const convertResponseToTableRows = (response: RosterResponse): RosterTableRow[] => {
   console.log('[TableConverter] Converting response to table rows:', response);
   
-  const rows: AssignedJobTableRow[] = [];
+  const rows: RosterTableRow[] = [];
   
   // Process assigned jobs
   Object.entries(response.jobs).forEach(([salesman_id, jobs]) => {
