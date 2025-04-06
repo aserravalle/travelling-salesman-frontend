@@ -56,7 +56,7 @@ export const convertResponseToTableRows = (response: RosterResponse): AssignedJo
 /**
  * Converts table data to CSV format
  */
-export const exportTableToCSV = (rows: AssignedJobTableRow[]): string => {
+export const exportTableToCSV = (rows: any[]): string => {
   console.log('[TableConverter] Exporting table data to CSV:', {
     rowCount: rows.length
   });
@@ -64,9 +64,10 @@ export const exportTableToCSV = (rows: AssignedJobTableRow[]): string => {
   // hack to get the location
   const processedRows = rows.map(row => ({
     ...row,
-    location: row.location?.address || '',
+    address: row.location?.address || '',
     latitude: row.location?.latitude || null,
     longitude: row.location?.longitude || null,
+    location: undefined 
   }));
 
   return Papa.unparse(processedRows);

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
-import { RosterResponse, Location } from '@/types/types';
+import { RosterResponse, Location, AssignedJobTableRow } from '@/types/types';
 import Papa from 'papaparse';
 
 // Mock Papa Parse
@@ -113,21 +113,103 @@ describe('tableConverter', () => {
         start_time: null
       });
     });
+
+    it('should convert a roster response into table rows', () => {
+      const mockResponse: RosterResponse = {
+        jobs: {
+          '1': [
+            {
+              job_id: 'job1',
+              date: '2023-01-01',
+              location: { address: '123 Main St', latitude: 40.7128, longitude: -74.006 },
+              duration_mins: 60,
+              entry_time: '09:00',
+              exit_time: '10:00',
+              start_time: '09:00',
+              client_name: 'Client A',
+              salesman_id: '101',
+              salesman_name: 'Salesman A'
+            }
+          ]
+        },
+        unassigned_jobs: [
+          {
+            job_id: 'job2',
+            date: '2023-01-02',
+            location: { address: '456 Elm St', latitude: 34.0522, longitude: -118.2437 },
+            duration_mins: 30,
+            entry_time: '11:00',
+            exit_time: '11:30',
+            client_name: 'Client B'
+          }
+        ],
+        message: 'Success'
+      };
+
+      const result = convertResponseToTableRows(mockResponse);
+
+      expect(result).toEqual([
+        {
+          job_id: 'job1',
+          date: '2023-01-01',
+          location: { address: '123 Main St', latitude: 40.7128, longitude: -74.006 },
+          duration_mins: 60,
+          entry_time: '09:00',
+          exit_time: '10:00',
+          assignment_status: 'Assigned',
+          salesman_id: '1',
+          start_time: '09:00',
+          client_name: 'Client A',
+          salesman_name: 'Salesman A'
+        },
+        {
+          job_id: 'job2',
+          date: '2023-01-02',
+          location: { address: '456 Elm St', latitude: 34.0522, longitude: -118.2437 },
+          duration_mins: 30,
+          entry_time: '11:00',
+          exit_time: '11:30',
+          assignment_status: 'Unassigned',
+          salesman_id: null,
+          start_time: null,
+          client_name: 'Client B'
+        }
+      ]);
+    });
   });
 
   describe('exportTableToCSV', () => {
     it('should convert table data to CSV format', () => {
       const mockData = [
-        { id: 1, name: 'Test 1' },
-        { id: 2, name: 'Test 2' }
+        {
+          job_id: 'job2',
+          date: '2023-01-02',
+          location: { address: '456 Elm St', latitude: 34.0522, longitude: -118.2437 },
+          duration_mins: 30,
+          entry_time: '11:00',
+          exit_time: '11:30',
+          assignment_status: 'Unassigned',
+          salesman_id: null,
+          start_time: null,
+          client_name: 'Client B'
+        }
       ];
       
       const mockCSV = 'id,name\n1,Test 1\n2,Test 2';
       (Papa.unparse as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mockCSV);
 
       const result = exportTableToCSV(mockData);
-      
-      expect(Papa.unparse).toHaveBeenCalledWith(mockData);
+
+      // hack to get the location
+      const processedRows = mockData.map(row => ({
+        ...row,
+        address: row.location?.address || '',
+        latitude: row.location?.latitude || null,
+        longitude: row.location?.longitude || null,
+        location: undefined
+      }));
+        
+      expect(Papa.unparse).toHaveBeenCalledWith(processedRows);
       expect(result).toBe(mockCSV);
     });
   });
@@ -148,5 +230,27 @@ describe('tableConverter', () => {
       expect(mockClick).toHaveBeenCalled();
       expect(mockRemoveChild).toHaveBeenCalled();
     });
+
+    it('should trigger a download of the CSV file', () => {
+      const mockData = 'mocked_csv_data';
+      const mockFilename = 'test.csv';
+      const createElementSpy = vi.spyOn(document, 'createElement');
+      const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+      const removeChildSpy = vi.spyOn(document.body, 'removeChild');
+      const mockClick = vi.fn();
+
+      createElementSpy.mockReturnValue({
+        setAttribute: vi.fn(),
+        click: mockClick,
+        href: '',
+      } as unknown as HTMLAnchorElement);
+
+      downloadCSV(mockData, mockFilename);
+
+      expect(createElementSpy).toHaveBeenCalledWith('a');
+      expect(appendChildSpy).toHaveBeenCalled();
+      expect(mockClick).toHaveBeenCalled();
+      expect(removeChildSpy).toHaveBeenCalled();
+    });
   });
-}); 
+});
