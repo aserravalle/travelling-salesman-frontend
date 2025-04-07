@@ -116,63 +116,147 @@ describe('tableConverter', () => {
 
     it('should convert a roster response into table rows', () => {
       const mockResponse: RosterResponse = {
-        jobs: {
-          '1': [
-            {
-              job_id: 'job1',
-              date: '2023-01-01',
-              location: { address: '123 Main St', latitude: 40.7128, longitude: -74.006 },
-              duration_mins: 60,
-              entry_time: '09:00',
-              exit_time: '10:00',
-              start_time: '09:00',
-              client_name: 'Client A',
-              salesman_id: '101',
-              salesman_name: 'Salesman A'
-            }
-          ]
+        "jobs": {
+            "101": [
+                {
+                    "job_id": "1",
+                    "client_name": "Airbnb 1",
+                    "date": "2025-03-28T09:00:00",
+                    "location": {
+                        "latitude": 43.7677,
+                        "longitude": 11.2593,
+                        "address": "1 R, Via dei Neri, San Niccolò, Quartiere 1, Firenze, Toscana, 50122, Italia"
+                    },
+                    "duration_mins": 120,
+                    "entry_time": "2025-03-28T08:00:00",
+                    "exit_time": "2025-03-28T23:00:00",
+                    "salesman_id": "101",
+                    "salesman_name": "Francesco",
+                    "start_time": "2025-03-28T09:00:00"
+                },
+                {
+                    "job_id": "3",
+                    "client_name": "Airbnb 3",
+                    "date": "2025-03-28T09:00:00",
+                    "location": {
+                        "latitude": 43.7704,
+                        "longitude": 11.2512,
+                        "address": "Tornabuoni Beacci, 3, Via dei Tornabuoni, Oltrarno, Quartiere 1, Firenze, Toscana, 50123, Italia"
+                    },
+                    "duration_mins": 120,
+                    "entry_time": "2025-03-28T11:00:00",
+                    "exit_time": "2025-03-28T23:00:00",
+                    "salesman_id": "101",
+                    "salesman_name": "Francesco",
+                    "start_time": "2025-03-28T11:20:00"
+                }
+            ],
+            "102": [
+                {
+                    "job_id": "5",
+                    "client_name": "Airbnb 5",
+                    "date": "2025-03-28T09:00:00",
+                    "location": {
+                        "latitude": 43.7687,
+                        "longitude": 11.2687,
+                        "address": "5, Via Ghibellina, San Niccolò, Quartiere 1, Firenze, Toscana, 50121, Italia"
+                    },
+                    "duration_mins": 120,
+                    "entry_time": "2025-03-28T08:40:00",
+                    "exit_time": "2025-03-28T14:00:00",
+                    "salesman_id": "102",
+                    "salesman_name": "Alessio",
+                    "start_time": "2025-03-28T09:00:00"
+                }
+            ]
         },
-        unassigned_jobs: [
+        "unassigned_jobs": [
           {
-            job_id: 'job2',
-            date: '2023-01-02',
-            location: { address: '456 Elm St', latitude: 34.0522, longitude: -118.2437 },
-            duration_mins: 30,
-            entry_time: '11:00',
-            exit_time: '11:30',
-            client_name: 'Client B'
-          }
+            "job_id": "6",
+            "client_name": "Airbnb 6",
+            "date": "2025-03-28T09:00:00",
+            "location": {
+                "latitude": 43.7738,
+                "longitude": 11.2547,
+                "address": "6, Borgo San Lorenzo, Quartiere 1, Firenze, Toscana, 50123, Italia"
+            },
+            "duration_mins": 120,
+            "entry_time": "2025-03-28T10:00:00",
+            "exit_time": "2025-03-28T23:00:00",
+        }
         ],
-        message: 'Success'
-      };
+        "message": "Roster completed with unassigned jobs"
+    };
 
       const result = convertResponseToTableRows(mockResponse);
 
       expect(result).toEqual([
         {
-          job_id: 'job1',
-          date: '2023-01-01',
-          location: { address: '123 Main St', latitude: 40.7128, longitude: -74.006 },
-          duration_mins: 60,
-          entry_time: '09:00',
-          exit_time: '10:00',
-          assignment_status: 'Assigned',
-          salesman_id: '1',
-          start_time: '09:00',
-          client_name: 'Client A',
-          salesman_name: 'Salesman A'
+          assignment_status: "Assigned",
+          client_name: "Airbnb 1",
+          date: "2025-03-28T09:00:00",
+          duration_mins: 120,
+          entry_time: "2025-03-28T08:00:00",
+          exit_time: "2025-03-28T23:00:00",
+          job_id: "1",
+          location: {
+            address: "1 R, Via dei Neri, San Niccolò, Quartiere 1, Firenze, Toscana, 50122, Italia",
+            latitude: 43.7677,
+            longitude: 11.2593,
+          },
+          salesman_id: "101",
+          salesman_name: "Francesco",
+          start_time: "2025-03-28T09:00:00",
         },
         {
-          job_id: 'job2',
-          date: '2023-01-02',
-          location: { address: '456 Elm St', latitude: 34.0522, longitude: -118.2437 },
-          duration_mins: 30,
-          entry_time: '11:00',
-          exit_time: '11:30',
+          job_id: '3',
+          date: '2025-03-28T09:00:00',
+          location: {
+            latitude: 43.7704,
+            longitude: 11.2512,
+            address: 'Tornabuoni Beacci, 3, Via dei Tornabuoni, Oltrarno, Quartiere 1, Firenze, Toscana, 50123, Italia'
+          },
+          duration_mins: 120,
+          entry_time: '2025-03-28T11:00:00',
+          exit_time: '2025-03-28T23:00:00',
+          assignment_status: 'Assigned',
+          client_name: 'Airbnb 3',
+          salesman_id: '101',
+          salesman_name: 'Francesco',
+          start_time: '2025-03-28T11:20:00'
+        },
+        {
+          job_id: '5',
+          date: '2025-03-28T09:00:00',
+          location: {
+            latitude: 43.7687,
+            longitude: 11.2687,
+            address: '5, Via Ghibellina, San Niccolò, Quartiere 1, Firenze, Toscana, 50121, Italia'
+          },
+          duration_mins: 120,
+          entry_time: '2025-03-28T08:40:00',
+          exit_time: '2025-03-28T14:00:00',
+          assignment_status: 'Assigned',
+          client_name: 'Airbnb 5',
+          salesman_id: '102',
+          salesman_name: 'Alessio',
+          start_time: '2025-03-28T09:00:00'
+        },
+        {
+          job_id: '6',
+          date: '2025-03-28T09:00:00',
+          location: {
+            latitude: 43.7738,
+            longitude: 11.2547,
+            address: '6, Borgo San Lorenzo, Quartiere 1, Firenze, Toscana, 50123, Italia'
+          },
+          duration_mins: 120,
+          entry_time: '2025-03-28T10:00:00',
+          exit_time: '2025-03-28T23:00:00',
           assignment_status: 'Unassigned',
+          client_name: 'Airbnb 6',
           salesman_id: null,
-          start_time: null,
-          client_name: 'Client B'
+          start_time: null
         }
       ]);
     });
