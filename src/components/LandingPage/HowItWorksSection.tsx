@@ -10,21 +10,21 @@ const HowItWorksSection = () => {
       icon: <FileUp className="h-12 w-12 text-white" />,
       title: "Upload Your Data",
       description: "Simply upload your worker and job data using our smart CSV import tool.",
-      image: "public/placeholder.svg",
+      image: "route-optimizer-upload.png",
       color: "bg-blue-500",
     },
     {
       icon: <BarChart3 className="h-12 w-12 text-white" />,
       title: "Process & Optimize",
       description: "Our algorithms analyze the data and create the most efficient routes and schedules.",
-      image: "public/placeholder.svg",
+      image: "placeholder.svg",
       color: "bg-indigo-500",
     },
     {
       icon: <MapPin className="h-12 w-12 text-white" />,
       title: "View & Export Results",
       description: "Review the optimized schedules on an interactive map and export them for your team.",
-      image: "public/placeholder.svg",
+      image: "route-optimizer-assigned.png",
       color: "bg-purple-500",
     },
   ];
@@ -93,9 +93,7 @@ const HowItWorksSection = () => {
         
         <div className="text-center mt-20">
           <Button className="gradient-blue text-white rounded-full px-8 py-6 text-lg">
-            <Link to="/RouteOptimizer">
-            Try Caminora For Free
-            </Link>
+            <Link to="/RouteOptimizer">Try Caminora For Free</Link>
           </Button>
         </div>
       </div>

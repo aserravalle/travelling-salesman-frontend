@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -11,24 +12,24 @@ const HeroSection = () => {
           {/* Hero text content */}
           <div className="w-full lg:w-1/2 text-center lg:text-left mb-12 lg:mb-0">
             <div className="animate-fade-in-down">
-              <span className="inline-block bg-blue-100 text-blue-700 rounded-full px-4 py-1 text-sm font-semibold mb-6">
-                Route Optimization Made Simple
-              </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6">
-                Work Smarter, <br />
-                <span className="gradient-text">Not Harder</span>
+                End Workplace Scheduling Chaos <br />
+                <span className="gradient-text">Forever</span>
               </h1>
               <p className="text-lg text-gray-700 mb-8 max-w-md mx-auto lg:mx-0">
-                Caminora helps businesses optimize routes for cleaning, maintenance, and delivery workers—saving time, reducing costs, and increasing productivity.
+                Caminora automatically optimizes routes for cleaning, maintenance, and delivery workers—saving time, reducing costs, and increasing productivity.
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
                 <Button className="gradient-blue text-white rounded-full px-6 py-6 text-lg">
-                  Get Started Free
-                  <ArrowRight size={20} className="ml-2" />
+                  <Link to="/RouteOptimizer">
+                    Try App
+                  </Link>
                 </Button>
                 <Button variant="outline" className="rounded-full px-6 py-6 text-lg border-gray-300">
-                  See Demo
+                  <Link to="https://youtu.be/m0soYdAOp7A" target="_blank" rel="noopener noreferrer">
+                    See Demo
+                  </Link>
                 </Button>
               </div>
               
@@ -58,7 +59,7 @@ const HeroSection = () => {
               
               <div className="relative">
                 <img 
-                  src="public/placeholder.svg" 
+                  src="route-optimizer-assigned.png" 
                   alt="Caminora Route Optimization" 
                   className="w-full"
                 />
