@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileUpload } from '@/components/FileUpload';
-import { DataTable } from '@/components/DataTable';
+import { RosterDataTable } from '@/components/DataTables/RosterDataTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,29 +9,23 @@ import { useToast } from '@/components/ui/use-toast';
 import { parseFile } from '@/lib/fileParser';
 import { convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { readFile } from '@/lib/fileReader';
-import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
 import { assignJobs } from '@/services/api';
 import { fadeIn } from '@/lib/motion';
-import { Job, Salesman, JobTableRow, RosterRequest } from '@/types/types';
-import { Send, Download, CheckCircle2, Loader2 } from 'lucide-react';
+import { Job, Salesman, RosterTableRow, RosterRequest } from '@/types/types';
+import { Download } from 'lucide-react';
 import Map from '@/components/Map';
 import StatusBanner from '@/components/StatusBanner';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { SalesmanDataTable } from '@/components/DataTables/SalesmanDataTable';
+import { JobDataTable } from '@/components/DataTables/JobDataTable';
+import { ReadyToProcessCard } from '../components/ReadyToProcessCard';
 
 const Index = () => {
   const { toast } = useToast();
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [parsedJobs, setParsedJobs] = useState<Job[]>([]);
   const [parsedSalesmen, setParsedSalesmen] = useState<Salesman[]>([]);
-  const [resultRows, setResultRows] = useState<JobTableRow[]>([]);
-  const [filteredRows, setFilteredRows] = useState<JobTableRow[]>([]);
+  const [resultRows, setResultRows] = useState<RosterTableRow[]>([]);
+  const [filteredRows, setFilteredRows] = useState<RosterTableRow[]>([]);
   const [activeTab, setActiveTab] = useState('upload');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasResults, setHasResults] = useState(false);
@@ -212,7 +206,7 @@ const Index = () => {
     });
   };
 
-  const handleFilteredDataChange = (data: JobTableRow[]) => {
+  const handleFilteredDataChange = (data: RosterTableRow[]) => {
     setFilteredRows(data);
   };
 
@@ -286,46 +280,7 @@ const Index = () => {
                           animate="show"
                           className="rounded-md border shadow-md bg-white"
                         >
-                          <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-medium flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                Salesmen Data Preview
-                              </h3>
-                              <span className="text-sm text-muted-foreground">{parsedSalesmen.length} salesmen</span>
-                            </div>
-                          </div>
-                          <div className="h-[250px] overflow-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Salesman ID</TableHead>
-                                  <TableHead>Salesman Name</TableHead>
-                                  <TableHead>Coordinates</TableHead>
-                                  <TableHead>Address</TableHead>
-                                  <TableHead>Start Time</TableHead>
-                                  <TableHead>End Time</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {parsedSalesmen.map((salesman, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell>{salesman.salesman_id}</TableCell>
-                                    <TableCell>{salesman.salesman_name || '-'}</TableCell>
-                                    <TableCell>
-                                      {salesman.location.latitude && salesman.location.longitude 
-                                        ? `[${salesman.location.latitude.toFixed(4)}, ${salesman.location.longitude.toFixed(4)}]`
-                                        : '-'
-                                      }
-                                    </TableCell>
-                                    <TableCell>{salesman.location.address || '-'}</TableCell>
-                                    <TableCell>{formatDisplayTime(salesman.start_time)}</TableCell>
-                                    <TableCell>{formatDisplayTime(salesman.end_time)}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
+                          <SalesmanDataTable salesmen={parsedSalesmen} />
                         </motion.div>
                       )}
 
@@ -336,50 +291,7 @@ const Index = () => {
                           animate="show"
                           className="rounded-md border shadow-md bg-white"
                         >
-                          <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 p-3 border-b">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-medium flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                Jobs Data Preview
-                              </h3>
-                              <span className="text-sm text-muted-foreground">{parsedJobs.length} jobs</span>
-                            </div>
-                          </div>
-                          <div className="h-[250px] overflow-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Job ID</TableHead>
-                                  <TableHead>Client Name</TableHead>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead>Coordinates</TableHead>
-                                  <TableHead>Address</TableHead>
-                                  <TableHead>Duration</TableHead>
-                                  <TableHead>Entry Time</TableHead>
-                                  <TableHead>Exit Time</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {parsedJobs.map((job, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell>{job.job_id}</TableCell>
-                                    <TableCell>{job.client_name || '-'}</TableCell>
-                                    <TableCell>{formatDisplayDate(job.date)}</TableCell>
-                                    <TableCell>
-                                      {job.location.latitude && job.location.longitude 
-                                        ? `[${job.location.latitude.toFixed(4)}, ${job.location.longitude.toFixed(4)}]`
-                                        : '-'
-                                      }
-                                    </TableCell>
-                                    <TableCell>{job.location.address || '-'}</TableCell>
-                                    <TableCell>{job.duration_mins} mins</TableCell>
-                                    <TableCell>{formatDisplayTime(job.entry_time)}</TableCell>
-                                    <TableCell>{formatDisplayTime(job.exit_time)}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
+                          <JobDataTable jobs={parsedJobs} />
                         </motion.div>
                       )}
                     </>
@@ -397,61 +309,15 @@ const Index = () => {
 
             <div className="container mx-auto px-4">
               <div className="flex justify-center">
-                <Card className="bg-gradient-to-br from-sky-100/50 to-blue-100/50 dark:from-sky-900/30 dark:to-blue-900/20 max-w-lg w-full shadow-lg">
-                  <CardHeader>
-                    <CardTitle>Ready to Process?</CardTitle>
-                    <CardDescription>
-                      {isReadyToProcess 
-                        ? "Your files are ready! Click the button below to proceed."
-                        : "Upload your files to begin the assignment process."}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full ${parsedJobs.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                      <span>{parsedJobs.length > 0 ? `${parsedJobs.length} jobs detected` : 'No jobs detected'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full ${parsedSalesmen.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                      <span>{parsedSalesmen.length > 0 ? `${parsedSalesmen.length} salesmen detected` : 'No salesmen detected'}</span>
-                    </div>
-                    
-                    <div className="pt-4 flex gap-2">
-                      {(parsedJobs.length > 0 || parsedSalesmen.length > 0) && (
-                        <Button 
-                          variant="outline" 
-                          onClick={handleReset}
-                          className="flex-1 shadow-sm hover:shadow"
-                          disabled={isSubmitting || isProcessingFiles}
-                        >
-                          Reset Data
-                        </Button>
-                      )}
-                      <Button 
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || !isReadyToProcess || isProcessingFiles}
-                        className={`bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 shadow-md hover:shadow-lg flex items-center gap-2 ${(parsedJobs.length > 0 || parsedSalesmen.length > 0) ? 'flex-1' : 'w-full'}`}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Processing...
-                          </>
-                        ) : isProcessingFiles ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Analyzing Files...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4" />
-                            Process and Assign Jobs
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ReadyToProcessCard 
+                  isReadyToProcess={isReadyToProcess}
+                  parsedJobs={parsedJobs}
+                  parsedSalesmen={parsedSalesmen}
+                  isSubmitting={isSubmitting}
+                  isProcessingFiles={isProcessingFiles}
+                  handleReset={handleReset}
+                  handleSubmit={handleSubmit}
+                />
               </div>
             </div>
           </TabsContent>
@@ -472,7 +338,7 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="mt-4">
-                      <DataTable 
+                      <RosterDataTable 
                         data={resultRows} 
                         onExport={handleExport} 
                         onFilteredDataChange={handleFilteredDataChange}

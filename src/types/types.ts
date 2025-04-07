@@ -44,7 +44,7 @@ export interface RosterResponse {
 }
 
 // More like assigned job 
-export interface JobTableRow {
+export interface RosterTableRow {
   job_id: string;
   date: string;
   location: Location;

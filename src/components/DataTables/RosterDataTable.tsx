@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { formatDisplayDate, formatDisplayTime } from '@/lib/formatDateTime';
-import { JobTableRow, Location } from '@/types/types';
+import { RosterTableRow, Location } from '@/types/types';
 import { cn } from '@/lib/utils';
 
 interface Column {
@@ -40,12 +40,12 @@ interface Column {
 }
 
 interface DataTableProps {
-  data: JobTableRow[];
+  data: RosterTableRow[];
   onExport?: () => void;
-  onFilteredDataChange?: (filteredData: JobTableRow[]) => void;
+  onFilteredDataChange?: (filteredData: RosterTableRow[]) => void;
 }
 
-export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTableProps) => {
+export const RosterDataTable = ({ data, onExport, onFilteredDataChange }: DataTableProps) => {
   const [sortBy, setSortBy] = useState<string>('start_time');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,16 +161,7 @@ export const DataTable = ({ data, onExport, onFilteredDataChange }: DataTablePro
       <ChevronUp className="w-4 h-4 ml-1" /> : 
       <ChevronDown className="w-4 h-4 ml-1" />;
   };
-
-  // Format location display
-  const formatLocation = (location: Location): string => {
-    if ('latitude' in location && 'longitude' in location) {
-      const coords = `[${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}]`;
-      return location.address ? `${location.address} ${coords}` : coords;
-    }
-    return location.address || '-';
-  };
-
+  
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">

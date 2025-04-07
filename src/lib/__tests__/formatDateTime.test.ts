@@ -7,6 +7,11 @@ describe('date formatting', () => {
     testCase(input);
   });
 
+  it('can parse API result', () => {
+    const input = "2025-02-05T09:00:00";
+    testCase(input);
+  });
+
   it('YYYY-MM-ddTHH:MM:ssZ', () => {
     const input = new Date(2025,1,5,9,0,0).toISOString();
     testCase(input);
