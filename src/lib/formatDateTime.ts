@@ -31,6 +31,9 @@ export function readDateTime(value: any): string {
       if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(dateStr)) {
         parsedDate = parseISO(dateStr);
       } 
+      else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(dateStr)) {
+        parsedDate = new Date(dateStr);
+      }
       else {
         const normalisedDate = dateStr.replace(/[-./]/g, ' ');
   
@@ -95,7 +98,7 @@ export const formatDisplayTime = (dateString: string): string => {
     dateString = readDateTime(dateString)
     const date = parseDate(dateString, 'yyyy-MM-dd HH:mm:ss', new Date());
     if (!isValid(date)) return '';
-    return format(date, 'HH:mm');
+      return format(date, 'HH:mm');
   } catch (error) {
     console.error('[FileParser] Error formatting display time:', {
       dateString,
