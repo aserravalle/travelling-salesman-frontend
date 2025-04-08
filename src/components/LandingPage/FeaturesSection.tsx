@@ -1,57 +1,55 @@
 
 import React from "react";
-import { 
-  Clock, 
-  Map, 
-  TrendingUp, 
-  Activity, 
-  Users, 
-  FileSpreadsheet,
-  BarChart3,
-  Zap
-} from "lucide-react";
 
 const features = [
   {
-    icon: <Clock className="h-8 w-8 text-blue-500" />,
-    title: "Save Time",
-    description: "Reduce planning time by up to 95% with automated route planning and optimization.",
+    metric: "+1.5",
+    unit: "hours",
+    title: "Each Day",
+    description: "average time saved by our customers daily",
   },
   {
-    icon: <Map className="h-8 w-8 text-blue-500" />,
-    title: "Optimize Routes",
-    description: "Our advanced algorithms find the most efficient routes, reducing travel time and costs.",
+    metric: "25",
+    unit: "%",
+    title: "More Jobs",
+    description: "Complete more jobs using our more efficient routes",
   },
   {
-    icon: <TrendingUp className="h-8 w-8 text-blue-500" />,
-    title: "Increase Productivity",
-    description: "Complete more jobs in less time with optimized scheduling and intelligent assignments.",
+    metric: "50",
+    unit: "%",
+    title: "Less Travel",
+    description: "less travel time saves on wages and fuel costs",
   },
   {
-    icon: <Activity className="h-8 w-8 text-blue-500" />,
-    title: "Real-time Tracking",
-    description: "Monitor progress and make adjustments on the fly with real-time worker location updates.",
+    metric: "3",
+    unit: "min",
+    title: "Quick Setup",
+    description: "to get started. No training required, simply upload your data as-is",
   },
-  {
-    icon: <Users className="h-8 w-8 text-blue-500" />,
-    title: "Team Management",
-    description: "Easily manage worker schedules, skills, and availability in one central platform.",
-  },
-  {
-    icon: <FileSpreadsheet className="h-8 w-8 text-blue-500" />,
-    title: "Simple Data Import",
-    description: "Upload your worker and job data with our smart importing tool that handles CSV files.",
-  },
-  {
-    icon: <BarChart3 className="h-8 w-8 text-blue-500" />,
-    title: "Performance Analytics",
-    description: "Gain insights into team performance and identify opportunities for improvement.",
-  },
-  {
-    icon: <Zap className="h-8 w-8 text-blue-500" />,
-    title: "Fast Processing",
-    description: "Get optimized routes in seconds, not hours, no matter how complex your schedule.",
-  },
+  // {
+  //   metric: "95",
+  //   unit: "%",
+  //   title: "Planning Reduction",
+  //   description: "less time spent planning routes with our automated system",
+  // },
+  // {
+  //   metric: "30",
+  //   unit: "%",
+  //   title: "Cost Savings",
+  //   description: "reduction in operational costs reported by our customers",
+  // },
+  // {
+  //   metric: "15",
+  //   unit: "hrs",
+  //   title: "Weekly Savings",
+  //   description: "average time saved per worker each week using our platform",
+  // },
+  // {
+  //   metric: "99",
+  //   unit: "%",
+  //   title: "Accuracy",
+  //   description: "route optimization accuracy even for complex schedules",
+  // },
 ];
 
 const FeaturesSection = () => {
@@ -60,11 +58,11 @@ const FeaturesSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Powerful Features to <span className="gradient-text">Streamline Your Operations</span>
+            Powerful Benefits with <span className="gradient-text">Measurable Results</span>
           </h2>
           <p className="text-lg text-gray-700">
-            Caminora combines cutting-edge route optimization with easy-to-use tools
-            that help your business operate more efficiently.
+            Our customers experience significant improvements in efficiency and productivity.
+            Here's what you can expect when using Caminora.
           </p>
         </div>
         
@@ -74,11 +72,14 @@ const FeaturesSection = () => {
               key={index} 
               className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1"
             >
-              <div className="rounded-full w-16 h-16 flex items-center justify-center bg-blue-50 mb-6">
-                {feature.icon}
+              <div className="mb-6 text-center">
+                <div className="flex items-center justify-center">
+                  <span className="text-4xl font-bold text-blue-600">{feature.metric}</span>
+                  <span className="text-2xl font-medium text-blue-500 ml-1">{feature.unit}</span>
+                </div>
+                <h3 className="text-xl font-semibold mt-2">{feature.title}</h3>
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
+              <p className="text-gray-600 text-center">{feature.description}</p>
             </div>
           ))}
         </div>

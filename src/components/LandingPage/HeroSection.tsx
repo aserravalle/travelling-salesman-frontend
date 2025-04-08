@@ -17,31 +17,28 @@ const HeroSection = () => {
                 <span className="gradient-text">Forever</span>
               </h1>
               <p className="text-lg text-gray-700 mb-8 max-w-md mx-auto lg:mx-0">
-                Caminora automatically optimizes routes for cleaning, maintenance, and delivery workers—saving time, reducing costs, and increasing productivity.
+              Caminora automatically optimizes routes for cleaning, maintenance, and delivery workers—saving time, reducing costs, and increasing productivity.
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                <Button className="gradient-blue text-white rounded-full px-6 py-6 text-lg">
+                <Button 
+                  className="gradient-blue text-white rounded-full px-6 py-6 text-lg"
+                  asChild
+                >
                   <Link to="/RouteOptimizer">
                     Try App
+                    <ArrowRight size={20} className="ml-2" />
                   </Link>
                 </Button>
-                <Button variant="outline" className="rounded-full px-6 py-6 text-lg border-gray-300">
+                <Button 
+                  variant="outline" 
+                  className="rounded-full px-6 py-6 text-lg border-gray-300"
+                  asChild
+                >
                   <Link to="https://youtu.be/m0soYdAOp7A" target="_blank" rel="noopener noreferrer">
                     See Demo
                   </Link>
                 </Button>
-              </div>
-              
-              <div className="mt-8 flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
-                <div className="flex items-center">
-                  <Check size={20} className="text-green-500 mr-2" />
-                  <span className="text-gray-700">No credit card required</span>
-                </div>
-                <div className="flex items-center">
-                  <Check size={20} className="text-green-500 mr-2" />
-                  <span className="text-gray-700">14-day free trial</span>
-                </div>
               </div>
             </div>
           </div>
