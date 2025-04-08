@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileUpload } from '@/components/FileUpload';
-import { RosterDataTable } from '@/components/DataTables/RosterDataTable';
+import { FileUpload } from '@/components/RouteOptimizer/FileUpload';
+import { RosterDataTable } from '@/components/RouteOptimizer/DataTables/RosterDataTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,15 +9,15 @@ import { useToast } from '@/components/ui/use-toast';
 import { parseFile } from '@/lib/fileParser';
 import { convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { readFile } from '@/lib/fileReader';
-import { assignJobs } from '@/services/api';
+import { assignJobs } from '@/services/api.ts';
 import { fadeIn } from '@/lib/motion';
 import { Job, Salesman, RosterTableRow, RosterRequest } from '@/types/types';
 import { Download } from 'lucide-react';
-import Map from '@/components/Map';
-import StatusBanner from '@/components/StatusBanner';
-import { SalesmanDataTable } from '@/components/DataTables/SalesmanDataTable';
-import { JobDataTable } from '@/components/DataTables/JobDataTable';
-import { ReadyToProcessCard } from '../components/ReadyToProcessCard';
+import Map from '@/components/RouteOptimizer/Map';
+import StatusBanner from '@/components/RouteOptimizer/StatusBanner';
+import { SalesmanDataTable } from '@/components/RouteOptimizer/DataTables/SalesmanDataTable';
+import { JobDataTable } from '@/components/RouteOptimizer/DataTables/JobDataTable';
+import { ReadyToProcessCard } from '../components/RouteOptimizer/ReadyToProcessCard.tsx';
 
 const Index = () => {
   const { toast } = useToast();
