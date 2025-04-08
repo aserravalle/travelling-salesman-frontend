@@ -1,7 +1,3 @@
-
-import React from "react";
-import { ArrowUpRight } from "lucide-react";
-
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   
@@ -16,25 +12,25 @@ const Footer = () => {
         { name: "Documentation", href: "#" },
       ],
     },
-    {
-      title: "Company",
-      links: [
-        { name: "About Us", href: "#" },
-        { name: "Careers", href: "#" },
-        { name: "Blog", href: "#" },
-        { name: "Press", href: "#" },
-        { name: "Contact", href: "#contact" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { name: "Terms of Service", href: "#" },
-        { name: "Privacy Policy", href: "#" },
-        { name: "Cookie Policy", href: "#" },
-        { name: "GDPR", href: "#" },
-      ],
-    },
+    // {
+    //   title: "Company",
+    //   links: [
+    //     { name: "About Us", href: "#" },
+    //     { name: "Careers", href: "#" },
+    //     { name: "Blog", href: "#" },
+    //     { name: "Press", href: "#" },
+    //     { name: "Contact", href: "#contact" },
+    //   ],
+    // },
+    // {
+    //   title: "Legal",
+    //   links: [
+    //     { name: "Terms of Service", href: "#" },
+    //     { name: "Privacy Policy", href: "#" },
+    //     { name: "Cookie Policy", href: "#" },
+    //     { name: "GDPR", href: "#" },
+    //   ],
+    // },
   ];
 
   return (
@@ -46,19 +42,6 @@ const Footer = () => {
             <a href="#" className="flex items-center mb-6">
               <span className="text-3xl font-bold gradient-text">Caminora</span>
             </a>
-            <p className="text-gray-400 mb-6 max-w-md">
-              Optimize routes for cleaning, maintenance, and delivery workers to save time, 
-              reduce costs, and increase productivity.
-            </p>
-            <div className="flex items-center space-x-2">
-              <a 
-                href="#" 
-                className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm flex items-center transition-colors"
-              >
-                Download Mobile App
-                <ArrowUpRight className="ml-2 h-4 w-4" />
-              </a>
-            </div>
           </div>
           
           {/* Links columns */}

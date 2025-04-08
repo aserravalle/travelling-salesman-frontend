@@ -9,7 +9,7 @@ const HowItWorksSection = () => {
     {
       icon: <FileUp className="h-12 w-12 text-white" />,
       title: "Upload Your Data",
-      description: "Simply upload your worker and job data using our smart CSV import tool.",
+      description: "Simply upload your worker and job data using our smart import tool.",
       image: "route-optimizer-upload.png",
       color: "bg-blue-500",
     },
@@ -17,7 +17,7 @@ const HowItWorksSection = () => {
       icon: <BarChart3 className="h-12 w-12 text-white" />,
       title: "Process & Optimize",
       description: "Our algorithms analyze the data and create the most efficient routes and schedules.",
-      image: "placeholder.svg",
+      image: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdzJmMzltbnh1NWtlN2ptc250NnZjemgxenk4M3c2OWswdGt0MzgzbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/82NyX1Y90RTvqtNP6A/giphy.gif",
       color: "bg-indigo-500",
     },
     {
@@ -63,7 +63,7 @@ const HowItWorksSection = () => {
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-center">
                       <span className="bg-green-100 text-green-800 rounded-full w-6 h-6 flex items-center justify-center mr-3">✓</span>
-                      <span>Works with CSV files from most scheduling systems</span>
+                      <span>Works with Excel or CSV files from most scheduling systems</span>
                     </li>
                     <li className="flex items-center">
                       <span className="bg-green-100 text-green-800 rounded-full w-6 h-6 flex items-center justify-center mr-3">✓</span>
@@ -71,7 +71,7 @@ const HowItWorksSection = () => {
                     </li>
                     <li className="flex items-center">
                       <span className="bg-green-100 text-green-800 rounded-full w-6 h-6 flex items-center justify-center mr-3">✓</span>
-                      <span>Support for various job types and worker skills</span>
+                      <span>Automatically detect coordinates from address data</span>
                     </li>
                   </ul>
                 )}

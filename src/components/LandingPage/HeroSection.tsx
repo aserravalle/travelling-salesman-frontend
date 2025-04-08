@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, MapPin } from "lucide-react";
@@ -13,14 +12,14 @@ const HeroSection = () => {
           <div className="w-full lg:w-1/2 text-center lg:text-left mb-12 lg:mb-0">
             <div className="animate-fade-in-down">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6">
-                End Workplace Scheduling Chaos <br />
-                <span className="gradient-text">Forever</span>
+                End Scheduling Chaos. 
+                <span className="gradient-text"> Forever.</span>
               </h1>
               <p className="text-lg text-gray-700 mb-8 max-w-md mx-auto lg:mx-0">
               Caminora automatically optimizes routes for cleaning, maintenance, and delivery workers—saving time, reducing costs, and increasing productivity.
               </p>
               
-              <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+              <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 relative z-10">
                 <Button 
                   className="gradient-blue text-white rounded-full px-6 py-6 text-lg"
                   asChild

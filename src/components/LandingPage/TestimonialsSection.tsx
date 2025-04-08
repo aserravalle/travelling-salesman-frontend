@@ -164,7 +164,9 @@ const TestimonialsSection = () => {
         
         <div className="mt-16 text-center">
           <Button className="rounded-full bg-gray-900 hover:bg-gray-800 text-white">
-            Book a Demo <ArrowRight className="ml-2 w-4 h-4" />
+            <a href="#contact" className="flex items-center">
+              Contact Us <ArrowRight className="ml-2 w-4 h-4" />
+            </a>
           </Button>
         </div>
       </div>

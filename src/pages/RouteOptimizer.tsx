@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { parseFile } from '@/lib/fileParser';
 import { convertResponseToTableRows, exportTableToCSV, downloadCSV } from '@/lib/tableConverter';
 import { readFile } from '@/lib/fileReader';
-import { assignJobs } from '@/services/routeOptimizerApi';
+import { assignJobs } from '@/services/api.ts';
 import { fadeIn } from '@/lib/motion';
 import { Job, Salesman, RosterTableRow, RosterRequest } from '@/types/types';
 import { Download } from 'lucide-react';

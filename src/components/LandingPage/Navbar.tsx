@@ -27,7 +27,7 @@ const Navbar = () => {
     { text: "Features", href: "#features" },
     { text: "How It Works", href: "#how-it-works" },
     { text: "Testimonials", href: "#testimonials" },
-    { text: "Pricing", href: "#pricing" },
+    // { text: "Pricing", href: "#pricing" },
     { text: "Contact", href: "#contact" },
   ];
 
@@ -63,7 +63,7 @@ const Navbar = () => {
               className="gradient-blue text-white rounded-full px-6"
               asChild
             >
-              <Link to="/RouteOptimizer">Get Started</Link>
+              <Link to="/RouteOptimizer">Log In</Link>
             </Button>
           </div>
           
@@ -99,7 +99,7 @@ const Navbar = () => {
                 asChild
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Link to="/RouteOptimizer">Get Started</Link>
+                <Link to="/RouteOptimizer">Log In</Link>
               </Button>
             </div>
           </div>

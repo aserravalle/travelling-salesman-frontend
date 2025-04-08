@@ -37,6 +37,37 @@ export const assignJobs = async (data: RosterRequest): Promise<RosterResponse> =
 
 };
 
+export const contactUs = async (data: {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  message: string;
+}): Promise<{ message: string }> => {
+  try {
+    const response = await fetch(`${VITE_API_ENDPOINT}/contact_us`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      mode: "cors",
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(errorText);
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error sending contact message:", error);
+    throw new Error("Failed to send contact message.");
+  }
+};
+
 const mockRosterResponse = (): RosterResponse => {
   return {
     jobs: {
