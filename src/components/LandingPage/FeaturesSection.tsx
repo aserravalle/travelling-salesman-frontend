@@ -25,31 +25,7 @@ const features = [
     unit: "min",
     title: "Quick Setup",
     description: "to get started. No training required, simply upload your data as-is",
-  },
-  // {
-  //   metric: "95",
-  //   unit: "%",
-  //   title: "Planning Reduction",
-  //   description: "less time spent planning routes with our automated system",
-  // },
-  // {
-  //   metric: "30",
-  //   unit: "%",
-  //   title: "Cost Savings",
-  //   description: "reduction in operational costs reported by our customers",
-  // },
-  // {
-  //   metric: "15",
-  //   unit: "hrs",
-  //   title: "Weekly Savings",
-  //   description: "average time saved per worker each week using our platform",
-  // },
-  // {
-  //   metric: "99",
-  //   unit: "%",
-  //   title: "Accuracy",
-  //   description: "route optimization accuracy even for complex schedules",
-  // },
+  }
 ];
 
 const FeaturesSection = () => {

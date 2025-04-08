@@ -12,25 +12,6 @@ const Footer = () => {
         { name: "Documentation", href: "#" },
       ],
     },
-    // {
-    //   title: "Company",
-    //   links: [
-    //     { name: "About Us", href: "#" },
-    //     { name: "Careers", href: "#" },
-    //     { name: "Blog", href: "#" },
-    //     { name: "Press", href: "#" },
-    //     { name: "Contact", href: "#contact" },
-    //   ],
-    // },
-    // {
-    //   title: "Legal",
-    //   links: [
-    //     { name: "Terms of Service", href: "#" },
-    //     { name: "Privacy Policy", href: "#" },
-    //     { name: "Cookie Policy", href: "#" },
-    //     { name: "GDPR", href: "#" },
-    //   ],
-    // },
   ];
 
   return (

@@ -4,11 +4,10 @@ import HeroSection from "@/components/LandingPage/HeroSection";
 import FeaturesSection from "@/components/LandingPage/FeaturesSection";
 import HowItWorksSection from "@/components/LandingPage/HowItWorksSection";
 import TestimonialsSection from "@/components/LandingPage/TestimonialsSection";
-import PricingSection from "@/components/LandingPage/PricingSection";
 import ContactSection from "@/components/LandingPage/ContactSection";
 import Footer from "@/components/LandingPage/Footer";
 
-const Index = () => {
+const LandingPage = () => {
   return (
     <div className="min-h-screen w-full">
       <Navbar />
@@ -25,4 +24,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default LandingPage;
