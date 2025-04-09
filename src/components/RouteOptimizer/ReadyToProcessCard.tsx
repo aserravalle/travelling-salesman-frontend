@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Job, Salesman } from '@/types/types';
 import { Loader2, Send } from 'lucide-react';
 
 interface ReadyToProcessCardProps {
   isReadyToProcess: boolean;
-  parsedJobs: any[];
-  parsedSalesmen: any[];
+  parsedJobs: Job[];
+  parsedSalesmen: Salesman[];
   isSubmitting: boolean;
-  isProcessingFiles: boolean;
+  isProcessingFiles: boolean;ß
   handleReset: () => void;
   handleSubmit: () => void;
 }
@@ -21,6 +22,46 @@ export const ReadyToProcessCard = ({
   handleReset,
   handleSubmit,
 }: ReadyToProcessCardProps) => {
+  function getNumberOfSalesmenString(parsedSalesmen: Salesman[]) {
+
+    if (parsedSalesmen.length == 0) {
+      return 'No salesmen detected';
+    }
+    else if (parsedSalesmen.length == 1) {
+      return '1 salesman detected';
+    }
+    else {
+      return `${parsedSalesmen.length} salesmen detected`;
+    }
+  }
+  
+  function getRecommendedSalesmen(parsedJobs: Job[]): number {
+    const totalJobDuration = parsedJobs.reduce((sum, job) => {
+      const minutesAvailable = (new Date(job.exit_time).getTime() - new Date(job.entry_time).getTime()) / (1000 * 60); // Time window to complete job
+      const travelTime = 20;
+      const workRatio = job.duration_mins / minutesAvailable ; // 0 < workRatio < 1. higher = more urgent
+      const urgencyFactor = 1 + workRatio;
+      return sum + (job.duration_mins + travelTime) * urgencyFactor;
+    }, 0);
+    const totalTimeWithBuffer = totalJobDuration + parsedJobs.length * 20; // Adding 20 minutes per job
+    const workDayMinutes = 8 * 60; // 8-hour workday in minutes
+    return Math.ceil(totalTimeWithBuffer / workDayMinutes);
+  }
+
+  function getNumberOfJobsString(parsedJobs: Job[]) {
+
+    if (parsedJobs.length == 0) {
+      return 'No jobs detected';
+    }
+    else if (parsedJobs.length == 1) {
+      return '1 job detected';
+    }
+    else {
+      const recommendedSalesmen = getRecommendedSalesmen(parsedJobs);
+      return `${parsedJobs.length} jobs detected (Recommended: ${recommendedSalesmen} salesmen)`;
+    }
+  }
+
   return (
     <Card className="bg-gradient-to-br from-sky-100/50 to-blue-100/50 dark:from-sky-900/30 dark:to-blue-900/20 max-w-lg w-full shadow-lg">
       <CardHeader>
@@ -34,11 +75,11 @@ export const ReadyToProcessCard = ({
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2">
           <div className={`w-4 h-4 rounded-full ${parsedJobs.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-          <span>{parsedJobs.length > 0 ? `${parsedJobs.length} jobs detected` : 'No jobs detected'}</span>
-        </div>
+          <span>{getNumberOfJobsString(parsedJobs)}</span>
+          </div>
         <div className="flex items-center gap-2">
           <div className={`w-4 h-4 rounded-full ${parsedSalesmen.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-          <span>{parsedSalesmen.length > 0 ? `${parsedSalesmen.length} salesmen detected` : 'No salesmen detected'}</span>
+          <span>{getNumberOfSalesmenString(parsedSalesmen)}</span>
         </div>
         
         <div className="pt-4 flex gap-2">
@@ -79,3 +120,4 @@ export const ReadyToProcessCard = ({
     </Card>
   );
 };
+
