@@ -8,7 +8,7 @@ interface ReadyToProcessCardProps {
   parsedJobs: Job[];
   parsedSalesmen: Salesman[];
   isSubmitting: boolean;
-  isProcessingFiles: boolean;ß
+  isProcessingFiles: boolean;
   handleReset: () => void;
   handleSubmit: () => void;
 }
@@ -23,7 +23,7 @@ export const ReadyToProcessCard = ({
   handleSubmit,
 }: ReadyToProcessCardProps) => {
   function getNumberOfSalesmenString(parsedSalesmen: Salesman[]) {
-
+  
     if (parsedSalesmen.length == 0) {
       return 'No salesmen detected';
     }
@@ -40,16 +40,20 @@ export const ReadyToProcessCard = ({
       const minutesAvailable = (new Date(job.exit_time).getTime() - new Date(job.entry_time).getTime()) / (1000 * 60); // Time window to complete job
       const travelTime = 20;
       const workRatio = job.duration_mins / minutesAvailable ; // 0 < workRatio < 1. higher = more urgent
-      const urgencyFactor = 1 + workRatio;
+      if (workRatio > 0.95) {
+        const client = job.client_name || 'Unknown Client';
+        console.warn(`${client} has a job with no buffer time - they may need to be rescheduled.`);
+      }
+      const urgencyFactor = 1 + Math.pow(workRatio, 0.75); // More urgent jobs get a higher factor with power < 1
       return sum + (job.duration_mins + travelTime) * urgencyFactor;
     }, 0);
     const totalTimeWithBuffer = totalJobDuration + parsedJobs.length * 20; // Adding 20 minutes per job
     const workDayMinutes = 8 * 60; // 8-hour workday in minutes
     return Math.ceil(totalTimeWithBuffer / workDayMinutes);
   }
-
+  
   function getNumberOfJobsString(parsedJobs: Job[]) {
-
+  
     if (parsedJobs.length == 0) {
       return 'No jobs detected';
     }
@@ -61,7 +65,7 @@ export const ReadyToProcessCard = ({
       return `${parsedJobs.length} jobs detected (Recommended: ${recommendedSalesmen} salesmen)`;
     }
   }
-
+  
   return (
     <Card className="bg-gradient-to-br from-sky-100/50 to-blue-100/50 dark:from-sky-900/30 dark:to-blue-900/20 max-w-lg w-full shadow-lg">
       <CardHeader>
@@ -76,12 +80,19 @@ export const ReadyToProcessCard = ({
         <div className="flex items-center gap-2">
           <div className={`w-4 h-4 rounded-full ${parsedJobs.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
           <span>{getNumberOfJobsString(parsedJobs)}</span>
-          </div>
+        </div>
         <div className="flex items-center gap-2">
           <div className={`w-4 h-4 rounded-full ${parsedSalesmen.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
           <span>{getNumberOfSalesmenString(parsedSalesmen)}</span>
         </div>
-        
+        {parsedJobs.some(job => {
+          const minutesAvailable = (new Date(job.exit_time).getTime() - new Date(job.entry_time).getTime()) / (1000 * 60);
+          return job.duration_mins >= minutesAvailable;
+        }) && (
+          <div className="text-sm text-red-500">
+            Warning: Some jobs have a very tight time window and may need to be rescheduled.
+          </div>
+        )}
         <div className="pt-4 flex gap-2">
           {(parsedJobs.length > 0 || parsedSalesmen.length > 0) && (
             <Button 
@@ -120,4 +131,3 @@ export const ReadyToProcessCard = ({
     </Card>
   );
 };
-
