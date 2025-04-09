@@ -44,7 +44,7 @@ export const ReadyToProcessCard = ({
         const client = job.client_name || 'Unknown Client';
         console.warn(`${client} has a job with no buffer time - they may need to be rescheduled.`);
       }
-      const urgencyFactor = 1 + Math.pow(workRatio, 0.75); // More urgent jobs get a higher factor with power < 1
+      const urgencyFactor = 1 + Math.pow(workRatio, 0.5); // More urgent jobs get a higher factor with power < 1
       return sum + (job.duration_mins + travelTime) * urgencyFactor;
     }, 0);
     const totalTimeWithBuffer = totalJobDuration + parsedJobs.length * 20; // Adding 20 minutes per job

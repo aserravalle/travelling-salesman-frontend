@@ -77,6 +77,23 @@ export const FileUpload = ({
     onFilesSelected(newFiles);
   };
 
+  const loadDemoFiles = async () => {
+    const demoFiles = [
+      { name: "jobs_florence.csv", url: "/jobs_florence.csv" },
+      { name: "salesmen_florence.csv", url: "/salesmen_florence.csv" }
+    ];
+
+    const fetchedFiles = await Promise.all(
+      demoFiles.map(async (file) => {
+        const response = await fetch(file.url);
+        const blob = await response.blob();
+        return new File([blob], file.name, { type: blob.type });
+      })
+    );
+
+    onFilesSelected(fetchedFiles);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -84,6 +101,15 @@ export const FileUpload = ({
         <CardDescription>
           {description}
         </CardDescription>
+        <div className="pt-4 flex gap-2">
+          <Button 
+            size="sm" 
+            className={'bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 shadow-md hover:shadow-lg flex items-center w-full'}
+            onClick={loadDemoFiles}
+          >
+            No Data? Load Demo Files
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div
