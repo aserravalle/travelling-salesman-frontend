@@ -1,12 +1,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Menu, X, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,13 +61,33 @@ const Navbar = () => {
           </nav>
           
           <div className="hidden md:flex items-center">
-            <Button 
-              variant="default" 
-              className="gradient-blue text-white rounded-full px-6"
-              asChild
-            >
-              <Link to="/RouteOptimizer">Log In</Link>
-            </Button>
+            {user ? (
+              <Button 
+                variant="outline" 
+                className="flex items-center space-x-2"
+                onClick={() => navigate("/profile")}
+              >
+                <User size={16} />
+                <span>Profile</span>
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  className="text-gray-700 hover:text-primary"
+                  asChild
+                >
+                  <Link to="/login">Log In</Link>
+                </Button>
+                <Button 
+                  variant="default" 
+                  className="gradient-blue text-white rounded-full px-6"
+                  asChild
+                >
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
           
           <div className="md:hidden">
@@ -99,7 +122,7 @@ const Navbar = () => {
                 asChild
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Link to="/RouteOptimizer">Log In</Link>
+                <Link to="/login">Log In</Link>
               </Button>
             </div>
           </div>
