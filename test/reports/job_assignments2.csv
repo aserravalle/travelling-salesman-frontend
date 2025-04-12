@@ -1,0 +1,13 @@
+job_id,date,location,duration_mins,entry_time,exit_time,assignment_status,salesman_id,start_time,client_name,salesman_name,address,latitude,longitude
+5,2025-04-08T09:00:00,,120,2025-04-08T08:40:00,2025-04-08T14:00:00,Assigned,101,2025-04-08T09:00:00,Airbnb 5,Francesco,"5, Via Ghibellina, San Niccolò, Quartiere 1, Firenze, Toscana, 50121, Italia",43.7687,11.2687
+22,2025-04-08T09:00:00,,120,2025-04-08T11:00:00,2025-04-08T14:00:00,Assigned,101,2025-04-08T11:14:00,Airbnb 22,Francesco,"Via de' Martelli, 22, 50122 Firenze FI, Italy",43.7741,11.2557
+21,2025-04-08T09:00:00,,90,2025-04-08T12:00:00,2025-04-08T15:00:00,Assigned,101,2025-04-08T13:19:00,Airbnb 21,Francesco,"Via del Proconsolo, 21, 50122 Firenze FI, Italy",43.7722,11.2578
+11,2025-04-08T09:00:00,,120,2025-04-08T12:00:00,2025-04-08T18:00:00,Assigned,101,2025-04-08T14:54:00,Airbnb 11,Francesco,"Via del Corso, 11, 50122 Firenze FI, Italy",43.7715,11.2575
+1,2025-04-08T09:00:00,,120,2025-04-08T08:00:00,2025-04-08T23:00:00,Assigned,102,2025-04-08T09:00:00,Airbnb 1,Alessio,"1 R, Via dei Neri, San Niccolò, Quartiere 1, Firenze, Toscana, 50122, Italia",43.7677,11.2593
+10,2025-04-08T09:00:00,,150,2025-04-08T11:00:00,2025-04-08T17:00:00,Assigned,102,2025-04-08T11:05:00,Airbnb 10,Alessio,"P.za della Signoria, 10, 50122 Firenze FI, Italy",43.7697,11.2567
+17,2025-04-08T09:00:00,,150,2025-04-08T12:00:00,2025-04-08T23:00:00,Assigned,102,2025-04-08T13:40:00,Airbnb 17,Alessio,"Via de' Bardi, 17, 50125 Firenze FI, Italy",43.766,11.2556
+20,2025-04-08T09:00:00,,60,2025-04-08T11:00:00,2025-04-08T23:00:00,Assigned,102,2025-04-08T16:16:00,Airbnb 20,Alessio,"Via della Condotta, 20, 50122 Firenze FI, Italy",43.7702,11.257
+8,2025-04-08T09:00:00,,90,2025-04-08T09:30:00,2025-04-08T15:00:00,Assigned,103,2025-04-08T09:30:00,Airbnb 8,Andrea,"Via dei Calzaiuoli, 8, 50123 Firenze FI, Italy",43.7717,11.2554
+24,2025-04-08T09:00:00,,90,2025-04-08T11:00:00,2025-04-08T14:30:00,Assigned,103,2025-04-08T11:05:00,Airbnb 24,Andrea,"Via del Giglio, 24, 50123 Firenze FI, Italy",43.7745,11.2523
+12,2025-04-08T09:00:00,,90,2025-04-08T13:00:00,2025-04-08T19:00:00,Assigned,103,2025-04-08T13:00:00,Airbnb 12,Andrea,"Via dei Calzaiuoli, 12, 50122 Firenze FI, Italy",43.7702,11.2553
+15,2025-04-08T09:00:00,,90,2025-04-08T16:00:00,2025-04-08T22:00:00,Assigned,103,2025-04-08T16:00:00,Airbnb 15,Andrea,"Via Ricasoli, 15, 50100 Firenze FI, Italy",43.774,11.2563

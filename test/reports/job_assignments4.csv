@@ -1,0 +1,15 @@
+job_id,date,location,duration_mins,entry_time,exit_time,assignment_status,salesman_id,start_time,client_name,salesman_name,address,latitude,longitude
+43,2025-04-10T09:00:00,,120,2025-04-10T09:00:00,2025-04-10T13:00:00,Assigned,101,2025-04-10T09:00:00,Airbnb 1,Francesco,"1 R, Via dei Neri, Firenze, Italia",43.7677,11.2593
+44,2025-04-10T09:00:00,,90,2025-04-10T11:00:00,2025-04-10T15:00:00,Assigned,101,2025-04-10T11:15:00,Airbnb 8,Francesco,"Via dei Calzaiuoli, 8, 50123 Firenze FI, Italy",43.7717,11.2554
+45,2025-04-10T09:00:00,,90,2025-04-10T13:00:00,2025-04-10T18:00:00,Assigned,101,2025-04-10T13:30:00,Airbnb 22,Francesco,"Via de' Martelli, 22, 50122 Firenze FI, Italy",43.7741,11.2557
+46,2025-04-10T09:00:00,,120,2025-04-10T10:00:00,2025-04-10T16:00:00,Assigned,102,2025-04-10T10:00:00,Airbnb 2,Alessio,"Via della Vigna Nuova, Firenze, Italia",43.7714,11.2507
+47,2025-04-10T09:00:00,,120,2025-04-10T13:00:00,2025-04-10T18:00:00,Assigned,102,2025-04-10T13:30:00,Airbnb 10,Alessio,"P.za della Signoria, 10, 50122 Firenze FI, Italy",43.7697,11.2567
+48,2025-04-10T09:00:00,,90,2025-04-10T08:30:00,2025-04-10T13:30:00,Assigned,103,2025-04-10T09:00:00,Airbnb 12,Andrea,"Via dei Calzaiuoli, 12, 50122 Firenze FI, Italy",43.7702,11.2553
+49,2025-04-10T09:00:00,,90,2025-04-10T14:00:00,2025-04-10T20:00:00,Assigned,103,2025-04-10T14:10:00,Airbnb 20,Andrea,"Via della Condotta, 20, 50122 Firenze FI, Italy",43.7702,11.257
+50,2025-04-10T09:00:00,,120,2025-04-10T10:00:00,2025-04-10T15:00:00,Assigned,104,2025-04-10T10:00:00,Airbnb 3,Matteo,"Tornabuoni Beacci, Via dei Tornabuoni, Firenze, Italia",43.7704,11.2512
+51,2025-04-10T09:00:00,,90,2025-04-10T12:30:00,2025-04-10T17:30:00,Assigned,104,2025-04-10T12:40:00,Airbnb 15,Matteo,"Via Ricasoli, 15, 50100 Firenze FI, Italy",43.774,11.2563
+52,2025-04-10T09:00:00,,120,2025-04-10T08:30:00,2025-04-10T14:30:00,Assigned,105,2025-04-10T09:00:00,Airbnb 13,Lorenzo,"Via della Scala, 13, 50123 Firenze FI, Italy",43.7736,11.2479
+53,2025-04-10T09:00:00,,120,2025-04-10T11:00:00,2025-04-10T17:00:00,Assigned,105,2025-04-10T11:15:00,Airbnb 19,Lorenzo,"Via de' Cerretani, 19, 50123 Firenze FI, Italy",43.7734,11.2537
+54,2025-04-10T09:00:00,,30,2025-04-10T12:00:00,2025-04-10T13:30:00,Assigned,106,2025-04-10T12:00:00,Airbnb 25,Giulia,"Via de' Tornabuoni, 25, 50122 Firenze FI, Italy",43.7704,11.2512
+55,2025-04-10T09:00:00,,30,2025-04-10T14:00:00,2025-04-10T15:30:00,Assigned,106,2025-04-10T14:05:00,Airbnb 23,Giulia,"Via della Spada, 23, 50123 Firenze FI, Italy",43.7717,11.2506
+56,2025-04-10T09:00:00,,30,2025-04-10T15:00:00,2025-04-10T16:00:00,Assigned,107,2025-04-10T15:00:00,Airbnb 26,Chiara,"Via della Stufa, 26, 50123 Firenze FI, Italy",43.7762,11.2549

@@ -1,0 +1,16 @@
+job_id,date,location,duration_mins,entry_time,exit_time,assignment_status,salesman_id,start_time,client_name,salesman_name,address,latitude,longitude
+7,2025-04-07T09:00:00,,120,2025-04-07T10:00:00,2025-04-07T14:30:00,Assigned,104,2025-04-07T10:00:00,Airbnb 7,Matteo,"Piazza Santa Croce, San Niccolò, Quartiere 1, Firenze, Toscana, 50122, Italia",43.7689,11.2606
+4,2025-04-07T09:00:00,,120,2025-04-07T11:00:00,2025-04-07T23:00:00,Assigned,104,2025-04-07T12:05:00,Airbnb 4,Matteo,"4 R, Via dei Benci, San Niccolò, Quartiere 1, Firenze, Toscana, 50122, Italia",43.7677,11.2596
+16,2025-04-07T09:00:00,,120,2025-04-07T11:00:00,2025-04-07T23:00:00,Assigned,104,2025-04-07T14:12:00,Airbnb 16,Matteo,"Via della Pergola, 16, 50121 Firenze FI, Italy",43.7732,11.2611
+2,2025-04-07T09:00:00,,90,2025-04-07T12:00:00,2025-04-07T23:00:00,Assigned,104,2025-04-07T16:22:00,Airbnb 2,Matteo,"2, Via della Vigna Nuova, San Frediano, Quartiere 1, Firenze, Toscana, 50123, Italia",43.7714,11.2507
+6,2025-04-07T09:00:00,,120,2025-04-07T10:00:00,2025-04-07T23:00:00,Assigned,105,2025-04-07T10:00:00,Airbnb 6,Lorenzo,"6, Borgo San Lorenzo, Quartiere 1, Firenze, Toscana, 50123, Italia",43.7738,11.2547
+19,2025-04-07T09:00:00,,120,2025-04-07T12:00:00,2025-04-07T23:00:00,Assigned,105,2025-04-07T12:05:00,Airbnb 19,Lorenzo,"Via de' Cerretani, 19, 50123 Firenze FI, Italy",43.7734,11.2537
+9,2025-04-07T09:00:00,,60,2025-04-07T10:00:00,2025-04-07T16:00:00,Assigned,105,2025-04-07T14:10:00,Airbnb 9,Lorenzo,"Via Roma, 9, 50123 Firenze FI, Italy",43.7722,11.2544
+14,2025-04-07T09:00:00,,60,2025-04-07T15:00:00,2025-04-07T21:00:00,Assigned,105,2025-04-07T15:15:00,Airbnb 14,Lorenzo,"Via dei Servi, 14, 50121 Firenze FI, Italy",43.7747,11.2587
+18,2025-04-07T09:00:00,,90,2025-04-07T11:00:00,2025-04-07T23:00:00,Assigned,105,2025-04-07T16:28:00,Airbnb 18,Lorenzo,"Via Maggio, 18, 50125 Firenze FI, Italy",43.7678,11.2495
+3,2025-04-07T09:00:00,,120,2025-04-07T11:00:00,2025-04-07T23:00:00,Assigned,106,2025-04-07T11:00:00,Airbnb 3,Giulia,"Tornabuoni Beacci, 3, Via dei Tornabuoni, Oltrarno, Quartiere 1, Firenze, Toscana, 50123, Italia",43.7704,11.2512
+13,2025-04-07T09:00:00,,120,2025-04-07T14:00:00,2025-04-07T20:00:00,Assigned,106,2025-04-07T14:00:00,Airbnb 13,Giulia,"Via della Scala, 13, 50123 Firenze FI, Italy",43.7736,11.2479
+26,2025-04-07T09:00:00,,30,2025-04-07T11:00:00,2025-04-07T14:30:00,Assigned,107,2025-04-07T11:00:00,Airbnb 26,Chiara,"Via della Stufa, 26, 50123 Firenze FI, Italy",43.7762,11.2549
+23,2025-04-07T09:00:00,,60,2025-04-07T12:30:00,2025-04-07T15:00:00,Assigned,107,2025-04-07T12:30:00,Airbnb 23,Chiara,"Via della Spada, 23, 50123 Firenze FI, Italy",43.7717,11.2506
+25,2025-04-07T09:00:00,,60,2025-04-07T12:30:00,2025-04-07T15:00:00,Assigned,107,2025-04-07T13:35:00,Airbnb 25,Chiara,"Via de' Tornabuoni, 25, 50122 Firenze FI, Italy",43.7704,11.2512
+27,2025-04-07T09:00:00,,30,2025-04-07T12:30:00,2025-04-07T14:00:00,Assigned,108,2025-04-07T12:30:00,Airbnb 27,Marco,"Via del Sole, 27, 50123 Firenze FI, Italy",43.7723,11.25
