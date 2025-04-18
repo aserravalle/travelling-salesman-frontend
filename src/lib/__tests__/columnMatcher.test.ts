@@ -127,6 +127,23 @@ describe('columnMatcher', () => {
     });
   });
 
+  it('should handle ZenMaid job column names', () => {
+    //const columns = ['date', 'entry_time', 'exit_time', 'latitude', 'longitude', 'duration_mins'];
+    let columns = ['Latest Appointment Date', 'Latest Appointment Start Time', 'Latest Appointment End Time', 'Customer Full Name', 'Address Line1', 'Address Postal Code', 'Address City', 'Address State'];
+    let result = matchColumns(columns, 'job');
+    
+    expect(result.type).toBe('job');
+    expect(result.columnMatches).toEqual({
+      entry_time: 'Latest Appointment Start Time',
+      exit_time: 'Latest Appointment End Time',
+      client_name: 'Customer Full Name',
+      address: 'Address Line1',
+      city: 'Address City',
+      postcode: 'Address Postal Code',
+      province: 'Address State'
+    });
+  });
+
   describe('Matching dataset type', () => {
     it('should handle Spanish job data set types dataset name', () => {
       let result = determineDatasetType([], "04_planificación_20250328.csv")

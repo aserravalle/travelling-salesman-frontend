@@ -9,6 +9,7 @@ export const JOB_FILE_NAMES = [
   'deliveries',
   'planificación',
   'planificacion',
+  'appointment',
 ];
 
 export const SALESMAN_FILE_NAMES = [

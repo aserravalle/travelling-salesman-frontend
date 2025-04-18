@@ -142,7 +142,7 @@ export const FileUpload = ({
                 transition={{ duration: 0.2 }}
                 className="flex flex-col items-center gap-4"
               >
-                <div className="grid gap-3 w-full max-w-md">
+                <div className="grid gap-3 w-full max-w-md max-h-64 overflow-y-auto">
                   {files.map((file, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 rounded-md bg-background border">
                       <FileType2 className="w-6 h-6 text-primary flex-shrink-0" />

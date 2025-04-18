@@ -17,6 +17,7 @@ export const JOB_COLUMN_MAPPINGS = {
     'customer_name',
     'customer_id',
     'tarea',
+    'customer full name',
   ],
   date: [
     'date',
@@ -40,6 +41,7 @@ export const JOB_COLUMN_MAPPINGS = {
     'start_window',
     'earliest_start',
     'window_start',
+    'latest appointment start time',
   ],
   exit_time: [
     'exit_time',
@@ -47,6 +49,7 @@ export const JOB_COLUMN_MAPPINGS = {
     'end_window',
     'latest_end',
     'window_end',
+    'latest appointment end time',
   ],
   description: [
     'description',

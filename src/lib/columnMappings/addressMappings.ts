@@ -6,6 +6,7 @@ export const ADDRESS_COLUMN_MAPPINGS = {
     'location_address',
     'location_street',
     'dirección',
+    'Address Line1',
   ],
   postcode: [
     'postcode',
@@ -17,6 +18,7 @@ export const ADDRESS_COLUMN_MAPPINGS = {
     'location_zipcode',
     'código postal',
     'cp',
+    'address postal code',
   ],
   city: [
     'city',
@@ -25,6 +27,7 @@ export const ADDRESS_COLUMN_MAPPINGS = {
     'population_city',
     'population_town',
     'población',
+    'address city',
   ],
   province: [
     'province',
@@ -36,6 +39,7 @@ export const ADDRESS_COLUMN_MAPPINGS = {
     'location_county',
     'location_region',
     'provincia',
+    'address state',
   ],
   country: [
     'country',

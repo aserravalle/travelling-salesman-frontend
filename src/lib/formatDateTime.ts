@@ -1,5 +1,5 @@
 import { parse as parseDate, parseISO, isValid, format } from 'date-fns';
-
+import { toZonedTime } from 'date-fns-tz'; // Import for handling time zones
 
 export function readDateTime(value: any): string {
   console.debug('[FileParser] Formatting date/time value:', value);
@@ -25,10 +25,16 @@ export function readDateTime(value: any): string {
 
     // If value is a string
     else {
-      const dateStr = String(value).trim()
+      const dateStr = String(value).trim();
+
+      // Handle time-only values (e.g., '3:00 PM')
+      if (/^\d{1,2}:\d{2}(?:\s?[APap][Mm])?$/.test(dateStr)) {
+        const zonedDate = toZonedTime(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
+        parsedDate = parseDate(dateStr, 'h:mm a', zonedDate);
+      }
 
       // Try parsing ISO 8601 format
-      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(dateStr)) {
+      else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(dateStr)) {
         parsedDate = parseISO(dateStr);
       } 
       else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(dateStr)) {

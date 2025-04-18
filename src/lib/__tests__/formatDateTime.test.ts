@@ -47,6 +47,24 @@ describe('date formatting', () => {
     testCase(input);
   });
 
+  it('HH:MM a', () => {
+    const input = ' 3:00 PM';
+    const today = new Date().toISOString().split('T')[0];
+    const readInput = readDateTime(input);
+    const todayFormatted = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+    
+    expect(readInput).toBe(today + ' 15:00:00');
+    expect(formatDisplayDate(readInput)).toBe(todayFormatted);
+    expect(formatDisplayTime(readInput)).toBe('15:00');
+  
+    expect(formatDisplayDate(input)).toBe(todayFormatted);
+    expect(formatDisplayTime(input)).toBe('15:00');
+  });
+
   it('YYYY/MM/dd', () => {
     const input = '2025/02/05 09:00:00';
     testCase(input);
