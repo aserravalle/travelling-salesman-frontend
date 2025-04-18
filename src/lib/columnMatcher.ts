@@ -64,7 +64,7 @@ export function determineDatasetTypeByColumnMatching(columns: string[]): Dataset
 
   // If missing both types of required fields, it's unknown
   const hasSalesmanRequiredFields = !!(matches.start_time && matches.end_time);
-  const hasJobRequiredFields = !!(matches.entry_time && matches.exit_time && matches.duration_mins);
+  const hasJobRequiredFields = !!(matches.client_name || (matches.entry_time && matches.exit_time && matches.duration_mins));
 
   // If we have the required fields, return the dataset type
   if (hasJobRequiredFields && !hasSalesmanRequiredFields) {

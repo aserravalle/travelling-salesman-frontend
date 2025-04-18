@@ -45,7 +45,6 @@ const Index = () => {
 
     try {
       for (const file of files) {
-        // Read the file
         const readResult = await readFile(file);
         
         if (readResult.errors.length > 0) {

@@ -22,5 +22,13 @@
             "NODE_ENV": "development"
           }
         },
+        {
+          "type": "chrome",
+          "request": "launch",
+          "name": "Launch Chrome against localhost",
+          "url": "http://localhost:8080",
+          "webRoot": "${workspaceFolder}/src",
+          "sourceMaps": true
+        }
     ]
 }
